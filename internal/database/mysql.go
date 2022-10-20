@@ -9,27 +9,20 @@ import (
 )
 
 func Connect() *sql.DB {
-	var db_user string
-	if os.Getenv("DB_USER") == "" {
+	db_user := os.Getenv("DB_USER")
+	if db_user == "" {
 		db_user = "root"
-	} else {
-		db_user = os.Getenv("DB_USER")
 	}
 
-	var db_pass string
-	if os.Getenv("DB_PASS") == "" {
-		db_pass = ""
-	} else {
-		db_pass = os.Getenv("DB_PASS")
-	}
+	db_pass := os.Getenv("DB_PASS")
 
-	var db_name string
-	if os.Getenv("DB_NAME") == "" {
+	db_name := os.Getenv("DB_NAME")
+	if db_name == "" {
 		db_name = "arbitrage"
-	} else {
-		db_name = os.Getenv("DB_NAME")
 	}
+
 	db_url := db_user + ":" + db_pass + "@tcp(127.0.0.1:3306)/" + db_name
+	fmt.Println(db_url)
 	db, err := sql.Open("mysql", db_url)
 	if err != nil {
 		fmt.Println("Unable to connect to mysql server using URL", db_url)
