@@ -22,7 +22,7 @@ func List(w http.ResponseWriter, r *http.Request) {
 	displayData := make(map[string]interface{})
 
 	app.Session.Put(r.Context(), "remote_ip", r.Host)
-	displayData["list_of_urls"] = models.ListUrls(app.DB)
+	displayData["list_of_trades"] = models.ListTrades(app.DB)
 
 	renderTemplate(w, "home", &models.TemplateData{
 		Data: displayData,
@@ -38,39 +38,11 @@ func About(w http.ResponseWriter, r *http.Request) {
 
 func Home(w http.ResponseWriter, r *http.Request) {
 	data := make(map[string]interface{})
-	data["url_model"] = models.Url{}
+	data["url_model"] = models.Trade{}
 	data["csrf_token"] = nosurf.Token(r)
 
 	renderTemplate(w, "new-url", &models.TemplateData{
 		Form: forms.New(nil),
-		Data: data,
-	})
-}
-
-func CreateUrl(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
-	form := forms.New(r.PostForm)
-	form.Has("surl", r)
-	form.ValidUrl("surl", r)
-
-	urlModel := models.Url{Name: r.Form.Get("surl")}
-
-	if form.Valid() {
-		id := models.SaveUrl(app.DB, urlModel)
-		if id > 0 {
-			app.Session.Put(r.Context(), "saved_id", id)
-
-			ViewUrl(w, r)
-			return
-		}
-	}
-
-	data := make(map[string]interface{})
-	data["csrf_token"] = nosurf.Token(r)
-	data["url_model"] = urlModel
-
-	renderTemplate(w, "new-url", &models.TemplateData{
-		Form: form,
 		Data: data,
 	})
 }
