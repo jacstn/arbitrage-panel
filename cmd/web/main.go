@@ -10,7 +10,6 @@ import (
 	"github.com/jacstn/arbitrage-panel/config"
 	"github.com/jacstn/arbitrage-panel/internal/database"
 	"github.com/jacstn/arbitrage-panel/internal/handlers"
-	"github.com/jacstn/arbitrage-panel/internal/helpers"
 )
 
 const portNumber = ":3000"
@@ -27,7 +26,6 @@ func main() {
 
 	db := database.Connect()
 	app.DB = db
-	app.CharArr = helpers.ReadCharArr()
 
 	app.Session = session
 	handlers.NewHandlers(&app)
