@@ -32,7 +32,7 @@ func ListTrades(db *sql.DB) []Trade {
 	for res.Next() {
 
 		var trade Trade
-		err := res.Scan(&trade.Id, &trade.Name, &trade.CreatedAt)
+		err := res.Scan(&trade.Id, &trade.LongQty, &trade.UpdatedAt)
 
 		if err != nil {
 			fmt.Println(err)
@@ -43,9 +43,9 @@ func ListTrades(db *sql.DB) []Trade {
 	return trades
 }
 
-func GetLogs(db *sql.DB, id string) Trade {
-	logs := Trade{}
-	err := db.QueryRow("SELECT * FROM domain where id=?", id).Scan(&logs.Id, &logs.Name, &logs.CreatedAt)
+func GetLogs(db *sql.DB, tradeId uint32) TradeLogs {
+	logs := TradeLogs{}
+	err := db.QueryRow("SELECT id, category, message FROM trade_logs where trade_id=?", tradeId).Scan(&logs.Id, &logs.Category, &logs.Message)
 
 	if err != nil {
 
