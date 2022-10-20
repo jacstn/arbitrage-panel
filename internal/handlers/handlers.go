@@ -5,10 +5,8 @@ import (
 	"html/template"
 	"net/http"
 
-	"github.com/go-chi/chi"
 	"github.com/jacstn/arbitrage-panel/config"
 	"github.com/jacstn/arbitrage-panel/internal/forms"
-	"github.com/jacstn/arbitrage-panel/internal/helpers"
 	"github.com/jacstn/arbitrage-panel/internal/models"
 	"github.com/justinas/nosurf"
 )
@@ -81,24 +79,11 @@ func ViewUrl(w http.ResponseWriter, r *http.Request) {
 	data := make(map[string]interface{})
 	id := app.Session.Pop(r.Context(), "saved_id")
 
-	url := models.GetUrlById(app.DB, fmt.Sprintf("%d", id))
-
-	if url.Id == 0 {
-		data["link"] = "URL not found"
-	} else {
-		data["link"] = r.Host + "/" + helpers.IntToCode(int(url.Id), app.CharArr)
-	}
+	fmt.Print(id)
 
 	renderTemplate(w, "view-url", &models.TemplateData{
 		Data: data,
 	})
-}
-
-func Redirect(w http.ResponseWriter, r *http.Request) {
-	id := helpers.CodeToInt(chi.URLParam(r, "id"), app.CharArr)
-	url := models.GetUrlById(app.DB, fmt.Sprintf("%d", id))
-
-	http.Redirect(w, r, url.Name, http.StatusSeeOther)
 }
 
 func renderTemplate(w http.ResponseWriter, templateName string, data *models.TemplateData) {
