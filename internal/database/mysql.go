@@ -22,7 +22,7 @@ func Connect() *sql.DB {
 	}
 
 	db_url := db_user + ":" + db_pass + "@tcp(127.0.0.1:3306)/" + db_name
-	fmt.Println(db_url)
+
 	db, err := sql.Open("mysql", db_url)
 	if err != nil {
 		fmt.Println("Unable to connect to mysql server using URL", db_url)

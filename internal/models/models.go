@@ -7,14 +7,22 @@ import (
 
 type Trade struct {
 	Id        uint16
-	Name      string
-	CreatedAt string
+	LongQty   float32
+	ShortQty  float32
+	OpenedAt  string
+	UpdatedAt string
+}
+
+type TradeLogs struct {
+	Id       uint16
+	Category string
+	Message  string
 }
 
 func ListTrades(db *sql.DB) []Trade {
 	trades := []Trade{}
 
-	res, err := db.Query("SELECT * FROM domain")
+	res, err := db.Query("SELECT * FROM trades")
 
 	if err != nil {
 		fmt.Println("cannot query from database", err)
