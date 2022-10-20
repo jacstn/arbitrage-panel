@@ -1,0 +1,37 @@
+{{template "base" .}}
+
+{{define "content"}}
+
+<div class="row">
+    <div class="col">
+        <img src="/static/images/urllogo.png"/>
+        <h3>Welcome to Shorten URL Generator Page</h3>
+    </div>
+</div>
+<div class="row">
+        <table class="table">
+            <thead>
+              <tr>
+                <th scope="col">#</th>
+                <th scope="col">URL</th>
+                <th scope="col">Created</th>
+              </tr>
+            </thead>
+            <tbody>
+                {{range index .Data "list_of_urls"}}
+              <tr>
+                <th scope="row">{{.Id}}</th>
+                <td>{{ .Name}}</td>
+                <td>{{ .CreatedAt}}</td>
+              </tr>
+              {{end}}
+            </tbody>
+          </table>
+</div>
+
+<div class="row">
+    <div class="col">
+    <a href="/new-url" class="btn btn-primary">Create Short URL</a>
+    </div>
+</div>
+{{end}}

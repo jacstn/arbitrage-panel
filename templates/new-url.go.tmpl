@@ -1,0 +1,24 @@
+{{template "base" .}}
+
+{{define "content"}}
+  <h3><img width="70px" src="/static/images/urllogo.png">Create Short URL</h3>
+  <form method="post" action="/new-url">
+    <div class="row mt-3">
+      <div class="form-group">
+        
+        {{$urlModel := index .Data "url_model"}}
+        {{with .Form.Errors.Get "surl"}}
+          <label class="text-danger"> {{.}}</label>
+        {{end}}
+        <input type="text" value="{{$urlModel.Name }}" class="form-control {{with .Form.Errors.Get "surl"}}is-invalid{{end}}" id="surl" name="surl" aria-describedby="surl" placeholder="Enter URL">
+        <input type="hidden" name="csrf_token" value="{{index .Data "csrf_token"}}"/>
+      </div>
+    </div>
+    <div class="row mt-3">
+      <div class="col">
+        <input type="submit" value="Submit" class="btn btn-primary"/>
+      </div>
+    </div>
+  </form>
+
+  {{end}}

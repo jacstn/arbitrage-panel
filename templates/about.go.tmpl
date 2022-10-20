@@ -1,0 +1,5 @@
+{{template "base" .}}
+<img src="/static/images/urllogo.png"/>
+{{define "content"}}
+    Your IP address is {{ index . "remote_ip" }}
+{{end}}
