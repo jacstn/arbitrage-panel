@@ -22,7 +22,9 @@ func List(w http.ResponseWriter, r *http.Request) {
 	displayData := make(map[string]interface{})
 
 	app.Session.Put(r.Context(), "remote_ip", r.Host)
-	displayData["list_of_trades"] = models.ListTrades(app.DB)
+	lt, nt := models.ListTrades(app.DB)
+	displayData["list_of_trades"] = lt
+	displayData["total_num_of_trades"] = nt
 
 	renderTemplate(w, "home", &models.TemplateData{
 		Data: displayData,
@@ -38,10 +40,17 @@ func About(w http.ResponseWriter, r *http.Request) {
 
 func Home(w http.ResponseWriter, r *http.Request) {
 	data := make(map[string]interface{})
-	data["url_model"] = models.Trade{}
+	lt, nt := models.ListTrades(app.DB)
+	data["trade_list"] = lt
+	data["num_of_trades"] = nt
 	data["csrf_token"] = nosurf.Token(r)
+	data["page"] = r.URL.Query().Get("page")
+	if data["page"] == "" {
+		data["page"] = 10
+	}
 
-	renderTemplate(w, "new-url", &models.TemplateData{
+	fmt.Println(data["page"])
+	renderTemplate(w, "home", &models.TemplateData{
 		Form: forms.New(nil),
 		Data: data,
 	})

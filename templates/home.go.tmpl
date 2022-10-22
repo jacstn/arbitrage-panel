@@ -3,35 +3,39 @@
 {{define "content"}}
 
 <div class="row">
-    <div class="col">
-        <img src="/static/images/urllogo.png"/>
-        <h3>Welcome to Shorten URL Generator Page</h3>
-    </div>
-</div>
-<div class="row">
-        <table class="table">
+        <table class="table-sm ">
             <thead>
               <tr>
                 <th scope="col">#</th>
-                <th scope="col">URL</th>
-                <th scope="col">Created</th>
+                <th scope="col">Status</th>
+                <th scope="col">SymbolLong</th>
+                <th scope="col">SymbolShort</th>
+                <th scope="col">QtyLong</th>
+                <th scope="col">QtyShort</th>
               </tr>
             </thead>
             <tbody>
-                {{range index .Data "list_of_urls"}}
+              {{range index .Data "trade_list"}}
               <tr>
                 <th scope="row">{{.Id}}</th>
-                <td>{{ .Name}}</td>
-                <td>{{ .CreatedAt}}</td>
+                <td>{{ .Status}}</td>
+                <td>{{ .SymbolLong}}</td>
+                <td>{{ .SymbolShort }}</td>
+                <td>{{ .QtyLong }}</td>
+                <td>{{ .QtyShort }}</td>
               </tr>
               {{end}}
             </tbody>
           </table>
-</div>
-
-<div class="row">
-    <div class="col">
-    <a href="/new-url" class="btn btn-primary">Create Short URL</a>
-    </div>
+          <nav aria-label="Page navigation example">
+            <ul class="pagination">
+              {{$page := .Data "page"}}
+              <li class="page-item"><a class="page-link" href="/?page=">Previous</a></li>
+              <li class="page-item"><a class="page-link" href="#">1</a></li>
+              <li class="page-item"><a class="page-link" href="#">2</a></li>
+              <li class="page-item"><a class="page-link" href="#">3</a></li>
+              <li class="page-item"><a class="page-link" href="#">Next</a></li>
+            </ul>
+          </nav>
 </div>
 {{end}}
