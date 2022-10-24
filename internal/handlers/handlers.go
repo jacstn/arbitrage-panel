@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"strconv"
 
 	"github.com/jacstn/arbitrage-panel/config"
 	"github.com/jacstn/arbitrage-panel/internal/forms"
@@ -17,20 +18,6 @@ func NewHandlers(c *config.AppConfig) {
 	app = c
 }
 
-func List(w http.ResponseWriter, r *http.Request) {
-
-	displayData := make(map[string]interface{})
-
-	app.Session.Put(r.Context(), "remote_ip", r.Host)
-	lt, nt := models.ListTrades(app.DB)
-	displayData["list_of_trades"] = lt
-	displayData["total_num_of_trades"] = nt
-
-	renderTemplate(w, "home", &models.TemplateData{
-		Data: displayData,
-	})
-}
-
 func About(w http.ResponseWriter, r *http.Request) {
 	//ip := app.Session.GetString(r.Context(), "remote_ip")
 	data := models.TemplateData{}
@@ -40,15 +27,18 @@ func About(w http.ResponseWriter, r *http.Request) {
 
 func Home(w http.ResponseWriter, r *http.Request) {
 	data := make(map[string]interface{})
-	lt, nt := models.ListTrades(app.DB)
+
+	data["csrf_token"] = nosurf.Token(r)
+	page, err := strconv.Atoi(r.URL.Query().Get("page"))
+	if err != nil {
+		page = 1
+	}
+	per_page := 30
+
+	lt, nt := models.ListTrades(app.DB, page, int(per_page))
 	data["trade_list"] = lt
 	data["num_of_trades"] = nt
-	data["csrf_token"] = nosurf.Token(r)
-	data["page"] = r.URL.Query().Get("page")
-	if data["page"] == "" {
-		data["page"] = 10
-	}
-
+	data["page"] = page
 	fmt.Println(data["page"])
 	renderTemplate(w, "home", &models.TemplateData{
 		Form: forms.New(nil),

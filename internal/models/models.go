@@ -24,10 +24,10 @@ type TradeLogs struct {
 	Message  string
 }
 
-func ListTrades(db *sql.DB) ([]Trade, uint64) {
+func ListTrades(db *sql.DB, page int, perPage int) ([]Trade, uint64) {
 	trades := []Trade{}
 
-	res, err := db.Query("SELECT count(id) FROM trades order by openedAt DESC  LIMIT 5")
+	res, err := db.Query("SELECT count(id) FROM trades")
 
 	if err != nil {
 		fmt.Println("cannot query from database", err)
@@ -36,7 +36,7 @@ func ListTrades(db *sql.DB) ([]Trade, uint64) {
 	var totalNum uint64
 	res.Scan(&totalNum)
 
-	res, err = db.Query("SELECT id, status, symbol_long, symbol_short, time_origin, open_diff, qty_long, qty_short, openedAt, updatedAt FROM trades order by openedAt DESC  LIMIT 5")
+	res, err = db.Query(fmt.Sprintf("SELECT id, status, symbol_long, symbol_short, time_origin, open_diff, qty_long, qty_short, openedAt, updatedAt FROM trades order by openedAt DESC  LIMIT %d OFFSET %d", perPage, (page-1)*perPage))
 
 	if err != nil {
 		fmt.Println("cannot query from database", err)

@@ -3,7 +3,7 @@
 {{define "content"}}
 
 <div class="row">
-        <table class="table-sm ">
+        <table class="table-sm" id="table-trades">
             <thead>
               <tr>
                 <th scope="col">#</th>
@@ -16,8 +16,8 @@
             </thead>
             <tbody>
               {{range index .Data "trade_list"}}
-              <tr>
-                <th scope="row">{{.Id}}</th>
+              <tr id="transaction-row-{{.Id}}">
+                <th onclick="tableclick({{.Id}})" scope="row">{{.Id}}</th>
                 <td>{{ .Status}}</td>
                 <td>{{ .SymbolLong}}</td>
                 <td>{{ .SymbolShort }}</td>
@@ -29,13 +29,78 @@
           </table>
           <nav aria-label="Page navigation example">
             <ul class="pagination">
-              {{$page := .Data "page"}}
-              <li class="page-item"><a class="page-link" href="/?page=">Previous</a></li>
-              <li class="page-item"><a class="page-link" href="#">1</a></li>
-              <li class="page-item"><a class="page-link" href="#">2</a></li>
-              <li class="page-item"><a class="page-link" href="#">3</a></li>
-              <li class="page-item"><a class="page-link" href="#">Next</a></li>
+              <li class="page-item" id="linkprev"><a id="hlinkprev" class="page-link" href="">Previous</a></li>
+              <li class="page-item" id="link1"><a id="hlink1" class="page-link" href="#">1</a></li>
+              <li class="page-item" id="link2"><a id="hlink2" class="page-link" href="#">2</a></li>
+              <li class="page-item" id="link3"><a id="hlink3" class="page-link" href="#">3</a></li>
+              <li class="page-item" id="linkforward"><a id="hlinkfwd" class="page-link" href="#">Next</a></li>
             </ul>
           </nav>
 </div>
+
+<script>
+  
+  function tableclick(id) {
+    console.log(id)
+    $("#transaction-logs").remove()
+    $('#transaction-row-' + id).after(`<tr id="transaction-logs"><td colspan="6">
+
+      <table class="table table-condensed">
+        <thead>
+          <tr>
+            <th>Firstname</th>
+            <th>Lastname</th>
+            <th>Email</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>John</td>
+            <td>Doe</td>
+            <td>john@example.com</td>
+          </tr>
+          <tr>
+            <td>Mary</td>
+            <td>Moe</td>
+            <td>mary@example.com</td>
+          </tr>
+          <tr>
+            <td>July</td>
+            <td>Dooley</td>
+            <td>july@example.com</td>
+          </tr>
+        </tbody>
+      </table>
+
+    </td></tr>`);
+  }
+</script>
+
+
+<script>
+  function populateLinks(page = null) {
+    console.log('populating links', page)
+    if (!page) {
+      page = {{index .Data "page"}};
+      console.log("current page", page)
+      if (page == 1) {
+        $('#linkprev').addClass('disabled');
+      } else {
+        $('#linkprev').removeClass('disabled');
+        const np = `/?page=${page-1}`;
+        console.log(np)
+        $('#hlinkprev').attr("href", np)
+      }
+
+      for (i=1; i<=3; i++) {
+        const np = `/?page=${page+i}`;
+        $(`#hlink${i}`).attr("href", np)
+        $(`#hlink${i}`).text(page+i)
+      }
+      $('#hlinkfwd').attr("href", `/?page=${page+4}`)
+    }
+  }
+
+  $( document ).ready(populateLinks());
+</script>
 {{end}}
