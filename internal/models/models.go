@@ -30,12 +30,12 @@ type TradeLog struct {
 func ListTrades(db *sql.DB, searchText string, page int, perPage int) ([]Trade, uint64) {
 	trades := []Trade{}
 	log.Println(searchText)
-	where := "WHERE `status` not in ('NO_BALANCE') "
+	where := "WHERE `status` not in ('NO_BALANCE', 'CANNOT_BORROW') "
 
 	searchText = strings.ToLower(searchText)
 
 	if searchText != "" {
-		where += fmt.Sprintf("and LOWER(symbol_long) LIKE '%%%s%%' OR LOWER(symbol_short) LIKE '%%%s%%' OR LOWER(status) LIKE '%%%s%%'", searchText, searchText)
+		where += fmt.Sprintf("and LOWER(symbol_long) LIKE '%%%s%%' OR LOWER(symbol_short) LIKE '%%%s%%' OR LOWER(status) LIKE '%%%s%%'", searchText, searchText, searchText)
 	}
 
 	res, err := db.Query(fmt.Sprintf("SELECT count(id) FROM trades %s", where))
