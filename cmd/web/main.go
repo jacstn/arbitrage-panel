@@ -12,7 +12,7 @@ import (
 	"github.com/jacstn/arbitrage-panel/internal/handlers"
 )
 
-const portNumber = ":3000"
+const portNumber = ":3333"
 
 var app = config.AppConfig{
 	Production: false,
