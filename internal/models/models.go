@@ -78,8 +78,9 @@ func GetLogs(db *sql.DB, tradeId uint64) []TradeLog {
 
 	for res.Next() {
 		var log TradeLog
-		err := res.Scan(&log.Id, &log.Category, &log.Message, &log.Raw)
-
+		var raw sql.NullString
+		err := res.Scan(&log.Id, &log.Category, &log.Message, &raw)
+		log.Raw = raw.String
 		if err != nil {
 			fmt.Println(err)
 		}

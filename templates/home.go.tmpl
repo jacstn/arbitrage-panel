@@ -51,6 +51,11 @@
     search_text = $("#search_box").val()
     window.location.replace(`/?page=${curr_page}&search=${search_text}`);
   }
+
+  $('#search_box').keypress(function (e) {
+    if(e.which ==13)
+     search()
+ });
 </script>
 <script>
   function tableclick(id) {
