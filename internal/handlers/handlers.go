@@ -66,6 +66,14 @@ func GetLogs(w http.ResponseWriter, r *http.Request) {
 	render.JSON(w, r, data)
 }
 
+func Market(w http.ResponseWriter, r *http.Request) {
+	data := make(map[string]interface{})
+	renderTemplate(w, "market", &models.TemplateData{
+		Form: forms.New(nil),
+		Data: data,
+	})
+}
+
 func renderTemplate(w http.ResponseWriter, templateName string, data *models.TemplateData) {
 	parsedTemplate, _ := template.ParseFiles("./templates/"+templateName+".go.tmpl", "./templates/base.layout.go.tmpl")
 
