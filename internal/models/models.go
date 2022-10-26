@@ -3,6 +3,8 @@ package models
 import (
 	"database/sql"
 	"fmt"
+	"log"
+	"strings"
 )
 
 type Trade struct {
@@ -18,16 +20,25 @@ type Trade struct {
 	UpdatedAt   string
 }
 
-type TradeLogs struct {
-	Id       uint16
+type TradeLog struct {
+	Id       uint64
 	Category string
 	Message  string
+	Raw      string
 }
 
-func ListTrades(db *sql.DB, page int, perPage int) ([]Trade, uint64) {
+func ListTrades(db *sql.DB, searchText string, page int, perPage int) ([]Trade, uint64) {
 	trades := []Trade{}
+	log.Println(searchText)
+	where := "WHERE `status` not in ('NO_BALANCE') "
 
-	res, err := db.Query("SELECT count(id) FROM trades")
+	searchText = strings.ToLower(searchText)
+
+	if searchText != "" {
+		where += fmt.Sprintf("and LOWER(symbol_long) LIKE '%%%s%%' OR LOWER(symbol_short) LIKE '%%%s%%'", searchText, searchText)
+	}
+
+	res, err := db.Query(fmt.Sprintf("SELECT count(id) FROM trades %s", where))
 
 	if err != nil {
 		fmt.Println("cannot query from database", err)
@@ -36,7 +47,7 @@ func ListTrades(db *sql.DB, page int, perPage int) ([]Trade, uint64) {
 	var totalNum uint64
 	res.Scan(&totalNum)
 
-	res, err = db.Query(fmt.Sprintf("SELECT id, status, symbol_long, symbol_short, time_origin, open_diff, qty_long, qty_short, openedAt, updatedAt FROM trades order by openedAt DESC  LIMIT %d OFFSET %d", perPage, (page-1)*perPage))
+	res, err = db.Query(fmt.Sprintf("SELECT id, status, symbol_long, symbol_short, time_origin, open_diff, qty_long, qty_short, openedAt, updatedAt FROM trades %s ORDER BY openedAt DESC  LIMIT %d OFFSET %d", where, perPage, (page-1)*perPage))
 
 	if err != nil {
 		fmt.Println("cannot query from database", err)
@@ -57,13 +68,22 @@ func ListTrades(db *sql.DB, page int, perPage int) ([]Trade, uint64) {
 	return trades, totalNum
 }
 
-func GetLogs(db *sql.DB, tradeId uint32) TradeLogs {
-	logs := TradeLogs{}
-	err := db.QueryRow("SELECT id, category, message FROM trade_logs where trade_id=?", tradeId).Scan(&logs.Id, &logs.Category, &logs.Message)
+func GetLogs(db *sql.DB, tradeId uint64) []TradeLog {
+	logs := []TradeLog{}
+	res, err := db.Query("SELECT id, category, message, raw FROM trade_logs where trade_id=?", tradeId)
 
 	if err != nil {
-
 		return logs
+	}
+
+	for res.Next() {
+		var log TradeLog
+		err := res.Scan(&log.Id, &log.Category, &log.Message, &log.Raw)
+
+		if err != nil {
+			fmt.Println(err)
+		}
+		logs = append(logs, log)
 	}
 
 	return logs

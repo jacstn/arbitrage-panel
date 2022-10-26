@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/go-chi/chi"
+	"github.com/go-chi/render"
 	"github.com/jacstn/arbitrage-panel/config"
 	"github.com/jacstn/arbitrage-panel/internal/forms"
 	"github.com/jacstn/arbitrage-panel/internal/models"
@@ -33,28 +35,35 @@ func Home(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		page = 1
 	}
+
+	searchText := r.URL.Query().Get("search")
+	fmt.Println("search text from url", searchText)
 	per_page := 30
 
-	lt, nt := models.ListTrades(app.DB, page, int(per_page))
+	lt, nt := models.ListTrades(app.DB, searchText, page, int(per_page))
 	data["trade_list"] = lt
 	data["num_of_trades"] = nt
 	data["page"] = page
-	fmt.Println(data["page"])
+	data["searchText"] = searchText
+
 	renderTemplate(w, "home", &models.TemplateData{
 		Form: forms.New(nil),
 		Data: data,
 	})
 }
 
-func ViewUrl(w http.ResponseWriter, r *http.Request) {
-	data := make(map[string]interface{})
-	id := app.Session.Pop(r.Context(), "saved_id")
+func GetLogs(w http.ResponseWriter, r *http.Request) {
 
-	fmt.Print(id)
+	id, err := strconv.Atoi(chi.URLParam(r, "id"))
 
-	renderTemplate(w, "view-url", &models.TemplateData{
-		Data: data,
-	})
+	if err != nil {
+		http.Error(w, http.StatusText(404), 404)
+		return
+	}
+
+	data := models.GetLogs(app.DB, uint64(id))
+
+	render.JSON(w, r, data)
 }
 
 func renderTemplate(w http.ResponseWriter, templateName string, data *models.TemplateData) {

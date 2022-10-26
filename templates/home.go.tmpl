@@ -2,6 +2,13 @@
 
 {{define "content"}}
 
+<div class="input-group mb-3">
+  <div class="input-group-prepend">
+    <button id="search_button" onclick="search()" class="btn btn-outline-secondary" type="button">Button</button>
+  </div>
+  <input id="search_box" type="text" value="{{index .Data "searchText"}}" class="form-control" placeholder="" aria-label="" aria-describedby="basic-addon1">
+</div>
+
 <div class="row">
         <table class="table-sm" id="table-trades">
             <thead>
@@ -39,45 +46,68 @@
 </div>
 
 <script>
-  
+  var search_text;
+  function search() {
+    search_text = $("#search_box").val()
+    window.location.replace(`/?page=${curr_page}&search=${search_text}`);
+  }
+</script>
+<script>
   function tableclick(id) {
     console.log(id)
-    $("#transaction-logs").remove()
-    $('#transaction-row-' + id).after(`<tr id="transaction-logs"><td colspan="6">
-
-      <table class="table table-condensed">
-        <thead>
-          <tr>
-            <th>Firstname</th>
-            <th>Lastname</th>
-            <th>Email</th>
-          </tr>
-        </thead>
+    var html;
+    $.ajax({ url: "/get-logs/" + id,
+    context: document.body,
+    success: function(done){
+      if (done){
+        html = `
+        <table class="table table-condensed" style="font-size:10px">
+          <thead>
+            <tr>
+              <th>Id</th>
+              <th>Category</th>
+              <th>Message</th>
+              <th>Raw</th>
+            </tr> 
+          </thead>
         <tbody>
-          <tr>
-            <td>John</td>
-            <td>Doe</td>
-            <td>john@example.com</td>
-          </tr>
-          <tr>
-            <td>Mary</td>
-            <td>Moe</td>
-            <td>mary@example.com</td>
-          </tr>
-          <tr>
-            <td>July</td>
-            <td>Dooley</td>
-            <td>july@example.com</td>
-          </tr>
-        </tbody>
-      </table>
+        `
+        for (let i=0; i<done.length; i++) {
+          const el = done[i] 
+          html+=`<tr>
+            <td>${el.Id}</td>
+            <td>${el.Category}</td>
+            <td>${el.Message}</td>
+            <td>${el.Raw}</td>
+          </tr>`
+        }
+        html += `
+      </tbody>
+    </table>
+    `
 
+
+    $("#transaction-logs").remove()
+    
+    $('#transaction-row-' + id).after(`<tr id="transaction-logs"><td colspan="6">
+      ${html}
     </td></tr>`);
+  
+  } else {
+    html = "no logs found"
+  }
+},
+error: function(err) {
+  console.error(err)
+}
+});
+  
   }
 </script>
 
 
 <script>
+  var curr_page;
   function populateLinks(page = null) {
     console.log('populating links', page)
     if (!page) {
@@ -92,13 +122,14 @@
         $('#hlinkprev').attr("href", np)
       }
 
-      for (i=1; i<=3; i++) {
-        const np = `/?page=${page+i}`;
-        $(`#hlink${i}`).attr("href", np)
+      for (i=1; i<=10; i++) {
+        const np = `?page=${page+i}`;
+        $(`#hlink${i}`).attr("href",  np + search)
         $(`#hlink${i}`).text(page+i)
       }
       $('#hlinkfwd').attr("href", `/?page=${page+4}`)
     }
+    curr_page = page
   }
 
   $( document ).ready(populateLinks());
