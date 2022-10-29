@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+	"os"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
@@ -19,8 +20,12 @@ func routes() *chi.Mux {
 	mux.Get("/about", handlers.About)
 	mux.Get("/get-logs/{id}", handlers.GetLogs)
 	mux.Get("/market", handlers.Market)
-	fileServer := http.FileServer(http.Dir("./static"))
-	mux.Handle("/static/*", http.StripPrefix("/static", fileServer))
+	mux.Get("/list-files", handlers.ListFiles)
+
+	mux.Handle("/static/*", http.StripPrefix("/static", http.FileServer(http.Dir("./static"))))
+
+	dataPath := os.Getenv("ARBITRAGE_PY_DIR") + "/data"
+	mux.Handle("/data/*", http.StripPrefix("/data", http.FileServer(http.Dir(dataPath))))
 
 	return mux
 }

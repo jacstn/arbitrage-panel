@@ -1,3 +1,37 @@
+{{template "base" .}}
+
+{{define "content"}}
+
+<script>
+  
+</script>
+
+<script>
+  listOfFiles = []
+  $(document).ready(() => {
+    getContent()
+  })
+  function getContent() {
+    var html;
+    $.ajax({ url: "./list-files",
+      context: document.body,
+      success: function(res){
+        for (i in res) {
+          f = res[i];
+          if (f.startsWith("cointegration_results")) listOfFiles.push(f)
+        }
+        console.log(listOfFiles)
+      },
+      error: function(err) {
+        console.error(err)
+      }
+    });
+  
+  }
+</script>
+
+
+
 <table class="table">
     <thead>
       <tr>
@@ -28,3 +62,5 @@
       </tr>
     </tbody>
   </table>
+
+  {{end}}

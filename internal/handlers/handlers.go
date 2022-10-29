@@ -3,8 +3,11 @@ package handlers
 import (
 	"fmt"
 	"html/template"
+	"io/ioutil"
 	"net/http"
+	"os"
 	"strconv"
+	"strings"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
@@ -72,6 +75,31 @@ func Market(w http.ResponseWriter, r *http.Request) {
 		Form: forms.New(nil),
 		Data: data,
 	})
+}
+
+func ListFiles(w http.ResponseWriter, r *http.Request) {
+	pyPath := os.Getenv("ARBITRAGE_PY_DIR")
+	if pyPath == "" {
+		http.Error(w, pyPath, 400)
+		return
+	}
+
+	files, err := ioutil.ReadDir(pyPath + "/data")
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, "cannot read python files path: "+pyPath, 400)
+		return
+	}
+	var fl []string
+	for _, f := range files {
+		fmt.Println()
+		name := f.Name()
+		if strings.Contains(name, ".csv") {
+			fl = append(fl, f.Name())
+		}
+	}
+
+	render.JSON(w, r, fl)
 }
 
 func renderTemplate(w http.ResponseWriter, templateName string, data *models.TemplateData) {
