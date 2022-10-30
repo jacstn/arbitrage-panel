@@ -7,6 +7,17 @@
 </script>
 
 <script>
+  function getTimeFrame(file) {
+    const arr = file.split("_");
+    return arr[2]
+  }
+  function addRow(file, i) {
+    return `<tr>
+      <th scope="row">${i}</th>
+      <td>${file}</td>
+      <td>${getTimeFrame(file)}</td>
+    </tr>`
+  }
   listOfFiles = []
   $(document).ready(() => {
     getContent()
@@ -16,11 +27,17 @@
     $.ajax({ url: "./list-files",
       context: document.body,
       success: function(res){
+        let table = ''
         for (i in res) {
           f = res[i];
-          if (f.startsWith("cointegration_results")) listOfFiles.push(f)
+          if (f.startsWith("cointegration_results")) {
+            listOfFiles.push(f)
+            table +=addRow(f,i+1)
+          }
         }
+        console.log(table)
         console.log(listOfFiles)
+        $('#files-table tbody').html(table);
       },
       error: function(err) {
         console.error(err)
@@ -32,34 +49,16 @@
 
 
 
-<table class="table">
+<table class="table" id="files-table">
     <thead>
       <tr>
         <th scope="col">#</th>
-        <th scope="col">First</th>
-        <th scope="col">Last</th>
-        <th scope="col">Handle</th>
+        <th scope="col">Filename</th>
+        <th scope="col">Date Created</th>
       </tr>
     </thead>
     <tbody>
-      <tr>
-        <th scope="row">1</th>
-        <td>Mark</td>
-        <td>Otto</td>
-        <td>@mdo</td>
-      </tr>
-      <tr>
-        <th scope="row">2</th>
-        <td>Jacob</td>
-        <td>Thornton</td>
-        <td>@fat</td>
-      </tr>
-      <tr>
-        <th scope="row">3</th>
-        <td>Larry</td>
-        <td>the Bird</td>
-        <td>@twitter</td>
-      </tr>
+
     </tbody>
   </table>
 
