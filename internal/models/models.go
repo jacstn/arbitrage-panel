@@ -27,18 +27,29 @@ type TradeLog struct {
 	Raw      string
 }
 
-func ListTrades(db *sql.DB, searchText string, page int, perPage int) ([]Trade, uint64) {
+func ListTrades(db *sql.DB, searchText string, status []string, page int, perPage int) ([]Trade, uint64) {
 	trades := []Trade{}
 	log.Println(searchText)
-	where := "WHERE `status` not in ('NO_BALANCE', 'CANNOT_BORROW') "
+	where := ""
+	if len(status) > 0 {
+		where += "WHERE `status` in ("
+		for i := 0; i < len(status); i++ {
+			where += fmt.Sprintf("'%s',", status[i])
+		}
+		where += ") AND"
+	}
 
 	searchText = strings.ToLower(searchText)
 
 	if searchText != "" {
-		where += fmt.Sprintf("and LOWER(symbol_long) LIKE '%%%s%%' OR LOWER(symbol_short) LIKE '%%%s%%' OR LOWER(status) LIKE '%%%s%%'", searchText, searchText, searchText)
+		if where == "" {
+			where += "WHERE"
+		}
+		where += fmt.Sprintf(" LOWER(symbol_long) LIKE '%%%s%%' OR LOWER(symbol_short) LIKE '%%%s%%' OR LOWER(status) LIKE '%%%s%%' OR CAST(id as CHAR) LIKE '%%%s%%'", searchText, searchText, searchText, searchText)
 	}
-
-	res, err := db.Query(fmt.Sprintf("SELECT count(id) FROM trades %s", where))
+	query := fmt.Sprintf("SELECT count(id) FROM trades %s", where)
+	fmt.Println("query", query)
+	res, err := db.Query(query)
 
 	if err != nil {
 		fmt.Println("cannot query from database", err)
@@ -88,4 +99,25 @@ func GetLogs(db *sql.DB, tradeId uint64) []TradeLog {
 	}
 
 	return logs
+}
+
+func GetListOfStatuses(db *sql.DB) []string {
+	statuses := []string{}
+	res, err := db.Query("SELECT distinct(status) from trades")
+	if err != nil {
+		return statuses
+	}
+
+	for res.Next() {
+		var st string
+		err := res.Scan(&st)
+
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		statuses = append(statuses, st)
+	}
+
+	return statuses
 }

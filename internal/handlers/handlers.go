@@ -30,20 +30,32 @@ func About(w http.ResponseWriter, r *http.Request) {
 	renderTemplate(w, "about", &data)
 }
 
+func _getListOfStatuses(s string) []string {
+	if s == "" {
+		return []string{}
+	}
+	return strings.Split("a,b,c", ",")
+}
+
 func Home(w http.ResponseWriter, r *http.Request) {
 	data := make(map[string]interface{})
 
 	data["csrf_token"] = nosurf.Token(r)
+
 	page, err := strconv.Atoi(r.URL.Query().Get("page"))
 	if err != nil {
 		page = 1
 	}
 
 	searchText := r.URL.Query().Get("search")
+	statuses := _getListOfStatuses(r.URL.Query().Get("statuses"))
+
 	fmt.Println("search text from url", searchText)
+
 	per_page := 30
 
-	lt, nt := models.ListTrades(app.DB, searchText, page, int(per_page))
+	lt, nt := models.ListTrades(app.DB, searchText, statuses, page, int(per_page))
+
 	data["trade_list"] = lt
 	data["num_of_trades"] = nt
 	data["page"] = page
