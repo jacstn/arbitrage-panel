@@ -23,6 +23,7 @@ type Trade struct {
 
 type TradeLog struct {
 	Id       uint64
+	Ago      string
 	Category string
 	Message  string
 	Raw      string
@@ -80,7 +81,7 @@ func ListTrades(db *sql.DB, searchText string, status string, page int, perPage 
 
 func GetLogs(db *sql.DB, tradeId uint64) []TradeLog {
 	logs := []TradeLog{}
-	res, err := db.Query("SELECT id, category, message, raw FROM trade_logs where trade_id=?", tradeId)
+	res, err := db.Query("SELECT id, category, message, raw, TIMEDIFF(NOW(), createdAt) AS createdAgo FROM trade_logs where trade_id=?", tradeId)
 
 	if err != nil {
 		return logs
@@ -89,7 +90,7 @@ func GetLogs(db *sql.DB, tradeId uint64) []TradeLog {
 	for res.Next() {
 		var log TradeLog
 		var raw sql.NullString
-		err := res.Scan(&log.Id, &log.Category, &log.Message, &raw)
+		err := res.Scan(&log.Id, &log.Category, &log.Message, &raw, &log.Ago)
 		log.Raw = raw.String
 		if err != nil {
 			fmt.Println(err)

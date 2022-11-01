@@ -11,6 +11,7 @@ function tableclick(id) {
             <thead>
               <tr>
                 <th>Id</th>
+                <th>Time</th>
                 <th>Category</th>
                 <th>Message</th>
                 <th>Raw</th>
@@ -21,6 +22,7 @@ function tableclick(id) {
           const el = done[i]
           html += `<tr>
               <td>${el.Id}</td>
+              <td>${el.Ago}</td>
               <td>${el.Category}</td>
               <td>${el.Message}</td>
               <td>${el.Raw}</td>
