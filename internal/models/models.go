@@ -17,6 +17,7 @@ type Trade struct {
 	QtyLong     float32
 	QtyShort    float32
 	OpenedAt    string
+	OpenedAgo   string
 	UpdatedAt   string
 }
 
@@ -56,7 +57,7 @@ func ListTrades(db *sql.DB, searchText string, status string, page int, perPage 
 	var totalNum uint64
 	res.Scan(&totalNum)
 
-	res, err = db.Query(fmt.Sprintf("SELECT id, status, symbol_long, symbol_short, time_origin, open_diff, qty_long, qty_short, openedAt, updatedAt FROM trades %s ORDER BY openedAt DESC  LIMIT %d OFFSET %d", where, perPage, (page-1)*perPage))
+	res, err = db.Query(fmt.Sprintf("SELECT id, status, symbol_long, symbol_short, time_origin, open_diff, qty_long, qty_short, openedAt, TIMEDIFF(NOW(), openedAt) AS opened_ago, updatedAt FROM trades %s ORDER BY openedAt DESC  LIMIT %d OFFSET %d", where, perPage, (page-1)*perPage))
 
 	if err != nil {
 		fmt.Println("cannot query from database", err)
@@ -66,7 +67,7 @@ func ListTrades(db *sql.DB, searchText string, status string, page int, perPage 
 	for res.Next() {
 
 		var trade Trade
-		err := res.Scan(&trade.Id, &trade.Status, &trade.SymbolLong, &trade.SymbolShort, &trade.TimeOrigin, &trade.OpenDiff, &trade.QtyLong, &trade.QtyShort, &trade.OpenedAt, &trade.UpdatedAt)
+		err := res.Scan(&trade.Id, &trade.Status, &trade.SymbolLong, &trade.SymbolShort, &trade.TimeOrigin, &trade.OpenDiff, &trade.QtyLong, &trade.QtyShort, &trade.OpenedAt, &trade.OpenedAgo, &trade.UpdatedAt)
 
 		if err != nil {
 			fmt.Println(err)
