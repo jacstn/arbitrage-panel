@@ -2,12 +2,42 @@
 
 {{define "content"}}
 
+
+
 <div class="input-group mb-3">
   <div class="input-group-prepend">
     <button id="search_button" onclick="search()" class="btn btn-outline-secondary" type="button">Button</button>
   </div>
   <input id="search_box" type="text" value="{{index .Data "searchText"}}" class="form-control" placeholder="" aria-label="" aria-describedby="basic-addon1">
 </div>
+
+<div class="row">
+  <div class="col form-check">
+    <input class="form-check-input" type="checkbox" id="running" checked>
+    <label class="form-check-label" for="running">
+      RUNNING
+    </label>
+  </div>
+  <div class="col form-check">
+    <input class="form-check-input" type="checkbox"id="finished" />
+    <label class="form-check-label" for="finished">
+      FINISHED
+    </label>
+  </div>
+  <div class="col form-check">
+    <input class="form-check-input" type="checkbox" id="nomoney" >
+    <label class="form-check-label" for="nomoney">
+      NO MONEY
+    </label>
+  </div>
+  <div class="col form-check">
+    <input class="form-check-input" type="checkbox"   id="syserr" >
+    <label class="form-check-label" for="syserr">
+      SYSTEM ERR
+    </label>
+  </div>
+</div>
+
 
 <div class="row">
         <table class="table-sm" id="table-trades">
@@ -46,70 +76,10 @@
 </div>
 
 <script>
-  var search_text;
-  function search() {
-    search_text = $("#search_box").val()
-    window.location.replace(`/?page=${curr_page}&search=${search_text}`);
-  }
-
-  $('#search_box').keypress(function (e) {
-    if(e.which ==13)
-     search()
- });
-</script>
-<script>
-  function tableclick(id) {
-    console.log(id)
-    var html;
-    $.ajax({ url: "/get-logs/" + id,
-    context: document.body,
-    success: function(done){
-      if (done){
-        html = `
-        <table class="table table-condensed" style="font-size:10px">
-          <thead>
-            <tr>
-              <th>Id</th>
-              <th>Category</th>
-              <th>Message</th>
-              <th>Raw</th>
-            </tr> 
-          </thead>
-        <tbody>
-        `
-        for (let i=0; i<done.length; i++) {
-          const el = done[i] 
-          html+=`<tr>
-            <td>${el.Id}</td>
-            <td>${el.Category}</td>
-            <td>${el.Message}</td>
-            <td>${el.Raw}</td>
-          </tr>`
-        }
-        html += `
-      </tbody>
-    </table>
-    `
-
-
-    $("#transaction-logs").remove()
-    
-    $('#transaction-row-' + id).after(`<tr id="transaction-logs"><td colspan="6">
-      ${html}
-    </td></tr>`);
-  
-  } else {
-    html = "no logs found"
-  }
-},
-error: function(err) {
-  console.error(err)
-}
-});
-  
-  }
+  var search_text = '';
 </script>
 
+<script src="/static/script.js?v=1"></script>
 
 <script>
   var curr_page;
@@ -123,13 +93,15 @@ error: function(err) {
       } else {
         $('#linkprev').removeClass('disabled');
         const np = `/?page=${page-1}`;
-        console.log(np)
+        console.log("np=", np)
         $('#hlinkprev').attr("href", np)
       }
 
       for (i=1; i<=10; i++) {
+        console.log('populating next page links')
         const np = `?page=${page+i}`;
-        $(`#hlink${i}`).attr("href",  np + search)
+
+        $(`#hlink${i}`).attr("href",  np + search_text)
         $(`#hlink${i}`).text(page+i)
       }
       $('#hlinkfwd').attr("href", `/?page=${page+4}`)

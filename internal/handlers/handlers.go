@@ -30,13 +30,6 @@ func About(w http.ResponseWriter, r *http.Request) {
 	renderTemplate(w, "about", &data)
 }
 
-func _getListOfStatuses(s string) []string {
-	if s == "" {
-		return []string{}
-	}
-	return strings.Split("a,b,c", ",")
-}
-
 func Home(w http.ResponseWriter, r *http.Request) {
 	data := make(map[string]interface{})
 
@@ -48,9 +41,9 @@ func Home(w http.ResponseWriter, r *http.Request) {
 	}
 
 	searchText := r.URL.Query().Get("search")
-	statuses := _getListOfStatuses(r.URL.Query().Get("statuses"))
+	statuses := r.URL.Query().Get("status")
 
-	fmt.Println("search text from url", searchText)
+	fmt.Println("search text from url", statuses)
 
 	per_page := 30
 

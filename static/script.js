@@ -1,75 +1,74 @@
-
-  
-  function loadLogs(id){
-    $.ajax({ url: "/get-logs/" + id,
+function tableclick(id) {
+  console.log(id)
+  var html;
+  $.ajax({
+    url: "/get-logs/" + id,
     context: document.body,
-    success: function(done){
-      console.log("load available done", done)
-      if (done){
+    success: function (done) {
+      if (done) {
+        html = `
+          <table class="table table-condensed" style="font-size:10px">
+            <thead>
+              <tr>
+                <th>Id</th>
+                <th>Category</th>
+                <th>Message</th>
+                <th>Raw</th>
+              </tr> 
+            </thead>
+            <tbody>`
+        for (let i = 0; i < done.length; i++) {
+          const el = done[i]
+          html += `<tr>
+              <td>${el.Id}</td>
+              <td>${el.Category}</td>
+              <td>${el.Message}</td>
+              <td>${el.Raw}</td>
+            </tr>`
+        }
+        html += `
+            </tbody>
+          </table>`
+
+
+        $("#transaction-logs").remove()
+
+        $('#transaction-row-' + id).after(`<tr id="transaction-logs"><td colspan="6">${html}</td></tr>`);
 
       } else {
-
+        html = "no logs found"
       }
-      $('#spinner').hide()
+    },
+    error: function (err) {
+      console.error(err)
     }
   });
-  }
-  function tableclick(id) {
-    console.log(id)
-    $("#transaction-logs").remove()
-    $('#transaction-row-' + id).after(`<tr id="transaction-logs"><td colspan="6">
 
-      <table class="table table-condensed">
-        <thead>
-          <tr>
-            <th>Firstname</th>
-            <th>Lastname</th>
-            <th>Email</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>John</td>
-            <td>Doe</td>
-            <td>john@example.com</td>
-          </tr>
-          <tr>
-            <td>Mary</td>
-            <td>Moe</td>
-            <td>mary@example.com</td>
-          </tr>
-          <tr>
-            <td>July</td>
-            <td>Dooley</td>
-            <td>july@example.com</td>
-          </tr>
-        </tbody>
-      </table>
+}
 
-    </td></tr>`);
-  }
+function getStatusStr() {
+  var status = ""
+  const f = $('#finished').is(":checked")
+  const ru = $('#running').is(":checked")
+  const se = $('#syserr').is(":checked")
+  const nm = $('#monomey').is(":checked")
 
-  function populateLinks(page = null) {
-    console.log('populating links', page)
-    if (!page) {
-      page = 21;
-      console.log("current page", page)
-      if (page == 1) {
-        $('#linkprev').addClass('disabled');
-      } else {
-        $('#linkprev').removeClass('disabled');
-        const np = `/?page=${page-1}`;
-        console.log(np)
-        $('#hlinkprev').attr("href", np)
-      }
+  status += (f == true) ? "'FINISH','MFINISH'," : ""
+  status += (ru == true) ? "'RUNNING','MANUAL','INC_RUNNING','ERR_FINISH'," : ""
+  status += (se == true) ? "'ERROR','SYSTEM_BUSY','GENERAL_ERR'," : ""
+  status += (nm == true) ? "'CANNOT_BORROW','NO_BALANCE','GENERAL_ERR','ERR_FINISH'," : ""
 
-      for (i=1; i<=3; i++) {
-        const np = `/?page=${page+i}`;
-        $(`#hlink${i}`).attr("href", np)
-        $(`#hlink${i}`).text(page+i)
-      }
-      $('#hlinkfwd').attr("href", `/?page=${page+4}`)
-    }
-  }
+  return status.replace(/,*$/, "");
+}
 
-  $( document ).ready(populateLinks());
+function search() {
+  search_text = $("#search_box").val()
+  const status_text = getStatusStr()
+  const newLink = `/?page=${curr_page}&search=${search_text}&status=${status_text}`
+  window.location.replace(newLink);
+}
+
+$('#search_box').keypress(function (e) {
+  if (e.which == 13)
+    search()
+});

@@ -27,16 +27,12 @@ type TradeLog struct {
 	Raw      string
 }
 
-func ListTrades(db *sql.DB, searchText string, status []string, page int, perPage int) ([]Trade, uint64) {
+func ListTrades(db *sql.DB, searchText string, status string, page int, perPage int) ([]Trade, uint64) {
 	trades := []Trade{}
 	log.Println(searchText)
 	where := ""
-	if len(status) > 0 {
-		where += "WHERE `status` in ("
-		for i := 0; i < len(status); i++ {
-			where += fmt.Sprintf("'%s',", status[i])
-		}
-		where += ") AND"
+	if status != "" {
+		where += fmt.Sprintf("WHERE `status` in (%s)", status)
 	}
 
 	searchText = strings.ToLower(searchText)
@@ -44,6 +40,8 @@ func ListTrades(db *sql.DB, searchText string, status []string, page int, perPag
 	if searchText != "" {
 		if where == "" {
 			where += "WHERE"
+		} else {
+			where += " AND "
 		}
 		where += fmt.Sprintf(" LOWER(symbol_long) LIKE '%%%s%%' OR LOWER(symbol_short) LIKE '%%%s%%' OR LOWER(status) LIKE '%%%s%%' OR CAST(id as CHAR) LIKE '%%%s%%'", searchText, searchText, searchText, searchText)
 	}
@@ -95,6 +93,7 @@ func GetLogs(db *sql.DB, tradeId uint64) []TradeLog {
 		if err != nil {
 			fmt.Println(err)
 		}
+
 		logs = append(logs, log)
 	}
 
