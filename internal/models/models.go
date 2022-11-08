@@ -102,9 +102,23 @@ func GetLogs(db *sql.DB, tradeId uint64) []TradeLog {
 	return logs
 }
 
+func GetTradeById(db *sql.DB, id uint64) Trade {
+	var trade Trade
+
+	err := db.QueryRow(fmt.Sprintf("SELECT id, status, symbol_long, symbol_short, time_origin, open_diff, qty_long, qty_short, openedAt, TIMEDIFF(NOW(), openedAt) AS opened_ago, updatedAt FROM trades where id=%d", id)).Scan(&trade.Id, &trade.Status, &trade.SymbolLong, &trade.SymbolShort, &trade.TimeOrigin, &trade.OpenDiff, &trade.QtyLong, &trade.QtyShort, &trade.OpenedAt, &trade.OpenedAgo, &trade.UpdatedAt)
+
+	if err != nil {
+		fmt.Println(err)
+		return Trade{}
+	}
+
+	return trade
+}
+
 func GetListOfStatuses(db *sql.DB) []string {
 	statuses := []string{}
 	res, err := db.Query("SELECT distinct(status) from trades")
+
 	if err != nil {
 		return statuses
 	}

@@ -20,13 +20,14 @@ function tableclick(id) {
             <tbody>`
         for (let i = 0; i < done.length; i++) {
           const el = done[i]
-          html += `<tr>
-              <td>${el.Id}</td>
-              <td>${el.Ago}</td>
-              <td>${el.Category}</td>
-              <td>${el.Message}</td>
-              <td>${el.Raw}</td>
-            </tr>`
+          html += `
+                  <tr>
+                    <td>${el.Id}</td>
+                    <td>${el.Ago}</td>
+                    <td>${el.Category}</td>
+                    <td>${el.Message}</td>
+                    <td>${el.Raw}</td>
+                  </tr>`
         }
         html += `
             </tbody>
