@@ -129,6 +129,6 @@ func renderTemplate(w http.ResponseWriter, templateName string, data *models.Tem
 
 	err := parsedTemplate.Execute(w, data)
 	if err != nil {
-		fmt.Fprintf(w, "Error handling template page!!", err)
+		fmt.Fprint(w, "Error handling template page!!", err)
 	}
 }
