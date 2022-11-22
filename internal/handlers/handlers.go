@@ -45,7 +45,7 @@ func Home(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Println("search text from url", statuses)
 
-	per_page := 100
+	per_page := 200
 
 	lt, nt := models.ListTrades(app.DB, searchText, statuses, page, int(per_page))
 
