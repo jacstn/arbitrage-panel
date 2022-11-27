@@ -67,7 +67,7 @@ function getStatusStr() {
 function search() {
   search_text = $("#search_box").val()
   const status_text = getStatusStr()
-  const newLink = `/?page=${curr_page}&search=${search_text}&status=${status_text}`
+  const newLink = `/all-trades?page=${curr_page}&search=${search_text}&status=${status_text}`
   window.location.replace(newLink);
 }
 
