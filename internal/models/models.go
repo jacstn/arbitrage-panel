@@ -8,17 +8,20 @@ import (
 )
 
 type Trade struct {
-	Id          uint64
-	Status      string
-	SymbolLong  string
-	SymbolShort string
-	TimeOrigin  string
-	OpenDiff    float32
-	QtyLong     float32
-	QtyShort    float32
-	OpenedAt    string
-	OpenedAgo   string
-	UpdatedAt   string
+	Id           uint64
+	Status       string
+	SymbolLong   string
+	SymbolShort  string
+	TimeOrigin   string
+	OpenDiff     float32
+	QtyLong      float32
+	QtyShort     float32
+	OpenedAt     string
+	OpenedAgo    string
+	HoursToClose string
+	UpdatedAt    string
+	ValLong      float32
+	ValShort     float32
 }
 
 type TradeLog struct {
@@ -27,6 +30,34 @@ type TradeLog struct {
 	Category string
 	Message  string
 	Raw      string
+}
+
+func ListRunningTrades(db *sql.DB) []Trade {
+	trades := []Trade{}
+
+	res, err := db.Query("SELECT (select `price` * qty_long from `prices` where `symbol`=`symbol_long` ORDER BY `time` DESC LIMIT 1) as val_long, (select `price` * qty_short from `prices` where `symbol`=`symbol_short` ORDER BY `time` DESC LIMIT 1) as val_short, id, status, symbol_long, symbol_short, time_origin, open_diff, qty_long, qty_short, openedAt, TIMEDIFF(NOW(), openedAt) AS opened_ago, hours_to_close, updatedAt FROM trades where `status` in ('RUNNING', 'MANUAL') ORDER BY openedAt DESC")
+
+	if err != nil {
+		fmt.Println("cannot query from database", err)
+		return []Trade{}
+	}
+
+	for res.Next() {
+		var trade Trade
+		err := res.Scan(&trade.ValLong, &trade.ValShort,
+			&trade.Id, &trade.Status, &trade.SymbolLong,
+			&trade.SymbolShort, &trade.TimeOrigin, &trade.OpenDiff,
+			&trade.QtyLong, &trade.QtyShort, &trade.OpenedAt,
+			&trade.OpenedAgo, &trade.HoursToClose,
+			&trade.UpdatedAt)
+
+		if err != nil {
+			fmt.Println(err)
+		}
+		trades = append(trades, trade)
+	}
+
+	return trades
 }
 
 func ListTrades(db *sql.DB, searchText string, status string, page int, perPage int) ([]Trade, uint64) {

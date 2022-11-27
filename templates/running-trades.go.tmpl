@@ -1,0 +1,27 @@
+{{template "base" .}}
+
+{{define "content"}}
+<table class="table">
+  <thead>
+    <tr>
+      <th scope="col">#</th>
+      <th scope="col">Hr To Close</th>
+      <th scope="col">Long</th>
+      <th scope="col">Short</th>
+      <th scope="col">Handle</th>
+    </tr>
+  </thead>
+  <tbody>
+   {{range index .Data "trade_list"}}
+    <tr>
+      <th scope="row">{{ .OpenedAgo}}</th>
+      <td>{{ .HoursToClose}}</td>
+      <td>{{ .SymbolLong}}</td>
+      <td>{{ .SymbolShort}}</td>
+      
+      <td>@mdo</td>
+    </tr>
+    {{end}}
+  </tbody>
+</table>
+{{end}}

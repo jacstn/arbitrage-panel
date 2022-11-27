@@ -30,7 +30,20 @@ func About(w http.ResponseWriter, r *http.Request) {
 	renderTemplate(w, "about", &data)
 }
 
-func Home(w http.ResponseWriter, r *http.Request) {
+func RunningTrades(w http.ResponseWriter, r *http.Request) {
+	data := make(map[string]interface{})
+
+	data["csrf_token"] = nosurf.Token(r)
+
+	data["trade_list"] = models.ListRunningTrades(app.DB)
+
+	renderTemplate(w, "running-trades", &models.TemplateData{
+		Form: forms.New(nil),
+		Data: data,
+	})
+}
+
+func AllTrades(w http.ResponseWriter, r *http.Request) {
 	data := make(map[string]interface{})
 
 	data["csrf_token"] = nosurf.Token(r)
@@ -54,7 +67,7 @@ func Home(w http.ResponseWriter, r *http.Request) {
 	data["page"] = page
 	data["searchText"] = searchText
 
-	renderTemplate(w, "home", &models.TemplateData{
+	renderTemplate(w, "all-trades", &models.TemplateData{
 		Form: forms.New(nil),
 		Data: data,
 	})
