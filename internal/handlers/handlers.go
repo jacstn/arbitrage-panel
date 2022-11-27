@@ -32,9 +32,7 @@ func About(w http.ResponseWriter, r *http.Request) {
 
 func RunningTrades(w http.ResponseWriter, r *http.Request) {
 	data := make(map[string]interface{})
-
 	data["csrf_token"] = nosurf.Token(r)
-
 	data["trade_list"] = models.ListRunningTrades(app.DB)
 
 	renderTemplate(w, "running-trades", &models.TemplateData{
