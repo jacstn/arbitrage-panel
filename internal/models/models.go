@@ -32,6 +32,15 @@ type TradeLog struct {
 	Raw      string
 }
 
+type BnbTrans struct {
+	Id        uint64
+	Raw       string
+	Price     float64
+	Qty       float64
+	CreatedAt string
+	Mode      string
+}
+
 func ListRunningTrades(db *sql.DB) []Trade {
 	trades := []Trade{}
 
@@ -166,4 +175,25 @@ func GetListOfStatuses(db *sql.DB) []string {
 	}
 
 	return statuses
+}
+
+func GetListOfBnbTransactions(db *sql.DB) []BnbTrans {
+	res, err := db.Query("SELECT id, raw, createdAt, price, qty, mode from bnb_trans")
+	var bnbTrans []BnbTrans
+	if err != nil {
+		return []BnbTrans{}
+	}
+
+	for res.Next() {
+		var bt BnbTrans
+		err := res.Scan(&bt.Id, &bt.Raw, &bt.CreatedAt, &bt.Price, &bt.Qty, &bt.Mode)
+
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		bnbTrans = append(bnbTrans, bt)
+	}
+
+	return bnbTrans
 }
