@@ -46,8 +46,9 @@
                 <th scope="col">Opened At</th>
                 <th scope="col">Status</th>
                 <th scope="col">SymbolLong</th>
-                <th scope="col">SymbolShort</th>
                 <th scope="col">QtyLong</th>
+                <th scope="col">SymbolShort</th>
+
                 <th scope="col">QtyShort</th>
               </tr>
             </thead>
@@ -58,8 +59,8 @@
                 <td>{{ .OpenedAgo}}</td>
                 <td>{{ .Status}}</td>
                 <td>{{ .SymbolLong}}</td>
-                <td>{{ .SymbolShort }}</td>
                 <td>{{ .QtyLong }}</td>
+                <td>{{ .SymbolShort }}</td>
                 <td>{{ .QtyShort }}</td>
               </tr>
               {{end}}
