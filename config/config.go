@@ -13,4 +13,5 @@ type AppConfig struct {
 	Production bool
 	Session    *scs.SessionManager
 	DB         *sql.DB
+	Url        string
 }

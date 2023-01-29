@@ -1,0 +1,45 @@
+{{template "base" .}} {{define "content"}}
+<table class="table">
+  <thead>
+    <tr>
+      <th scope="col">#</th>
+      <th scope="col">Hr To Close</th>
+      <th scope="col">Long</th>
+      <th scope="col">Qty Long</th>
+      <th scope="col">Short</th>
+      <th scope="col">Qty Short</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{range index .Data "trade_list"}}
+    <tr id="transaction-row-{{.Id}}">
+      <th onclick="tableclick({{ .Id }})" scope="row">{{ .Id }}</th>
+      <td>{{ .HoursToClose}}</td>
+      <td>{{ .SymbolLong}}</td>
+      <td>{{ .QtyLong}}</td>
+      <td>{{ .SymbolShort}}</td>
+      <td>{{ .QtyShort}}</td>
+    </tr>
+    {{end}}
+  </tbody>
+</table>
+{{end}}
+<script>
+  const xhr = new XMLHttpRequest();
+  function tradeDetails(id) {
+    console.log(id);
+    xhr.open("GET", "/get-logs/" + id);
+    xhr.send();
+    xhr.on;
+  }
+
+  xhr.addEventListener("load", () => {
+    if (xhr.status === 200) {
+      console.log(JSON.parse(xhr.response));
+    } else {
+      console.log(xhr.status);
+    }
+  });
+
+  function addLogs(id, logs) {}
+</script>

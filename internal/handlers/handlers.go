@@ -34,7 +34,7 @@ func RunningTrades(w http.ResponseWriter, r *http.Request) {
 	data := make(map[string]interface{})
 	data["csrf_token"] = nosurf.Token(r)
 	data["trade_list"] = models.ListRunningTrades(app.DB)
-
+	data["base_url"] = app.Url
 	renderTemplate(w, "running-trades", &models.TemplateData{
 		Form: forms.New(nil),
 		Data: data,
@@ -136,7 +136,7 @@ func ListFiles(w http.ResponseWriter, r *http.Request) {
 }
 
 func renderTemplate(w http.ResponseWriter, templateName string, data *models.TemplateData) {
-	parsedTemplate, _ := template.ParseFiles("./templates/"+templateName+".go.tmpl", "./templates/base.layout.go.tmpl")
+	parsedTemplate, _ := template.ParseFiles("./templates/"+templateName+".go.html", "./templates/base.layout.go.html")
 
 	err := parsedTemplate.Execute(w, data)
 	if err != nil {
