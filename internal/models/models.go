@@ -75,13 +75,13 @@ func ListRunningTrades(db *sql.DB) []Trade {
 func GetResultsFromLogs(db *sql.DB) (float32, float32, float32) {
 	q := `select(select SUM((select SUM(CAST(REGEXP_SUBSTR(raw, '(?<="cummulativeQuoteQty":.")[^"]+') as float))
 	FROM trade_logs WHERE trade_id=trades.id AND message in ('CROSS short from binance', 'SPOT closed long info')) - 
-	(select SUM(CAST(REGEXP_SUBSTR(raw, '(?<="cummulativeQuoteQty":.")[^"]+') as float))
+	(select SUM(CAST(REGEXP_SUBSTR(raw, '(?<="cummulativeQuoteQty":.")[^"]+') as REAL))
 	FROM trade_logs WHERE trade_id=trades.id AND message in ('long from binance', 'CROSS closed short info'))) from trades
 	where status in ("FINISH", "MFINISH") and  RIGHT(symbol_long,4)="USDT"),
 	(select price from prices where symbol="BTCUSDT" order by time desc limit 1),
-	(select SUM((select SUM(CAST(REGEXP_SUBSTR(raw, '(?<="cummulativeQuoteQty":.")[^"]+') as float))
+	(select SUM((select SUM(CAST(REGEXP_SUBSTR(raw, '(?<="cummulativeQuoteQty":.")[^"]+') as REAL))
 	FROM trade_logs WHERE trade_id=trades.id AND message in ('CROSS short from binance', 'SPOT closed long info')) - 
-	(select SUM(CAST(REGEXP_SUBSTR(raw, '(?<="cummulativeQuoteQty":.")[^"]+') as float))
+	(select SUM(CAST(REGEXP_SUBSTR(raw, '(?<="cummulativeQuoteQty":.")[^"]+') as REAL))
 	FROM trade_logs WHERE trade_id=trades.id AND message in ('long from binance', 'CROSS closed short info'))) from trades
 	where status in ("FINISH", "MFINISH") and  RIGHT(symbol_long,3)="BTC")`
 
