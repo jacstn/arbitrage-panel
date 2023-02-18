@@ -73,7 +73,7 @@ func ListRunningTrades(db *sql.DB) []Trade {
 }
 
 func GetResultsFromLogs(db *sql.DB) (float32, float32, float32) {
-	q := `select(select SUM((select SUM(CAST(REGEXP_SUBSTR(raw, '(?<="cummulativeQuoteQty":.")[^"]+') as float))
+	q := `select(select SUM((select SUM(CAST(REGEXP_SUBSTR(raw, '(?<="cummulativeQuoteQty":.")[^"]+') as REAL))
 	FROM trade_logs WHERE trade_id=trades.id AND message in ('CROSS short from binance', 'SPOT closed long info')) - 
 	(select SUM(CAST(REGEXP_SUBSTR(raw, '(?<="cummulativeQuoteQty":.")[^"]+') as REAL))
 	FROM trade_logs WHERE trade_id=trades.id AND message in ('long from binance', 'CROSS closed short info'))) from trades
