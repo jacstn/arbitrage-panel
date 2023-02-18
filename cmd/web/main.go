@@ -23,7 +23,7 @@ func main() {
 	session.Lifetime = 24 * time.Hour
 	session.Cookie.Persist = true
 	session.Cookie.Secure = app.Production
-
+	
 	db := database.Connect()
 	app.DB = db
 

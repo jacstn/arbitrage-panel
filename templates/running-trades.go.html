@@ -1,4 +1,16 @@
 {{template "base" .}} {{define "content"}}
+<div class="row mt-2">
+  <div class="col-6">
+    <div class="card">
+      <div class="card-body">
+        Result: <b>{{ index .Data "usdt_res"}} USDT</b>,
+        <b>{{ index .Data "btc_res"}} BTC</b>
+        ({{ index .Data "btc_res_usdt"}} USDT)
+      </div>
+    </div>
+  </div>
+</div>
+
 <table class="table">
   <thead>
     <tr>
@@ -6,8 +18,10 @@
       <th scope="col">Hr To Close</th>
       <th scope="col">Long</th>
       <th scope="col">Qty Long</th>
+      <th scope="col">Val Long</th>
       <th scope="col">Short</th>
       <th scope="col">Qty Short</th>
+      <th scope="col">Val Short</th>
     </tr>
   </thead>
   <tbody>
@@ -17,8 +31,10 @@
       <td>{{ .HoursToClose}}</td>
       <td>{{ .SymbolLong}}</td>
       <td>{{ .QtyLong}}</td>
+      <td>{{ .ValLong}}</td>
       <td>{{ .SymbolShort}}</td>
       <td>{{ .QtyShort}}</td>
+      <td>{{ .ValShort}}</td>
     </tr>
     {{end}}
   </tbody>

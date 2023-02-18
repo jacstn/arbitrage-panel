@@ -44,7 +44,10 @@ type BnbTrans struct {
 func ListRunningTrades(db *sql.DB) []Trade {
 	trades := []Trade{}
 
-	res, err := db.Query("SELECT (select `price` * qty_long from `prices` where `symbol`=`symbol_long` ORDER BY `time` DESC LIMIT 1) as val_long, (select `price` * qty_short from `prices` where `symbol`=`symbol_short` ORDER BY `time` DESC LIMIT 1) as val_short, id, status, symbol_long, symbol_short, time_origin, open_diff, qty_long, qty_short, openedAt, TIMEDIFF(NOW(), openedAt) AS opened_ago, hours_to_close, updatedAt FROM trades where `status` in ('RUNNING', 'MANUAL') ORDER BY openedAt DESC")
+	res, err := db.Query(`SELECT (select price from prices where symbol=symbol_long ORDER BY time DESC LIMIT 1) * qty_long as val_long, 
+	(select price from prices where symbol=symbol_short ORDER BY time DESC LIMIT 1) * qty_short as val_short, 
+	id, status, symbol_long, symbol_short, time_origin, open_diff, qty_long, qty_short, openedAt, 
+	TIMEDIFF(NOW(), openedAt) AS opened_ago, hours_to_close, updatedAt FROM trades where status in ('RUNNING', 'MANUAL') ORDER BY openedAt DESC`)
 
 	if err != nil {
 		fmt.Println("cannot query from database", err)
@@ -67,6 +70,34 @@ func ListRunningTrades(db *sql.DB) []Trade {
 	}
 
 	return trades
+}
+
+func GetResultsFromLogs(db *sql.DB) (float32, float32, float32) {
+	q := `select(select SUM((select SUM(CAST(REGEXP_SUBSTR(raw, '(?<="cummulativeQuoteQty":.")[^"]+') as float))
+	FROM trade_logs WHERE trade_id=trades.id AND message in ('CROSS short from binance', 'SPOT closed long info')) - 
+	(select SUM(CAST(REGEXP_SUBSTR(raw, '(?<="cummulativeQuoteQty":.")[^"]+') as float))
+	FROM trade_logs WHERE trade_id=trades.id AND message in ('long from binance', 'CROSS closed short info'))) from trades
+	where status in ("FINISH", "MFINISH") and  RIGHT(symbol_long,4)="USDT"),
+	(select price from prices where symbol="BTCUSDT" order by time desc limit 1),
+	(select SUM((select SUM(CAST(REGEXP_SUBSTR(raw, '(?<="cummulativeQuoteQty":.")[^"]+') as float))
+	FROM trade_logs WHERE trade_id=trades.id AND message in ('CROSS short from binance', 'SPOT closed long info')) - 
+	(select SUM(CAST(REGEXP_SUBSTR(raw, '(?<="cummulativeQuoteQty":.")[^"]+') as float))
+	FROM trade_logs WHERE trade_id=trades.id AND message in ('long from binance', 'CROSS closed short info'))) from trades
+	where status in ("FINISH", "MFINISH") and  RIGHT(symbol_long,3)="BTC")`
+
+	var usdtRes float32
+	var btcRes float32
+	var btcPrice float32
+
+	err := db.QueryRow(q).Scan(&usdtRes, &btcPrice, &btcRes)
+
+	if err != nil {
+		fmt.Println("cannot query from database", err)
+		return 0, 0, 0
+	}
+
+	return usdtRes, btcRes, btcPrice
+
 }
 
 func ListTrades(db *sql.DB, searchText string, status string, page int, perPage int) ([]Trade, uint64) {
@@ -122,6 +153,29 @@ func ListTrades(db *sql.DB, searchText string, status string, page int, perPage 
 func GetLogs(db *sql.DB, tradeId uint64) []TradeLog {
 	logs := []TradeLog{}
 	res, err := db.Query("SELECT id, category, message, raw, TIMEDIFF(NOW(), createdAt) AS createdAgo FROM trade_logs where trade_id=?", tradeId)
+
+	if err != nil {
+		return logs
+	}
+
+	for res.Next() {
+		var log TradeLog
+		var raw sql.NullString
+		err := res.Scan(&log.Id, &log.Category, &log.Message, &raw, &log.Ago)
+		log.Raw = raw.String
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		logs = append(logs, log)
+	}
+
+	return logs
+}
+
+func GetBinanceTransactionsFromLogs(db *sql.DB, tradeId uint64) []TradeLog {
+	logs := []TradeLog{}
+	res, err := db.Query("SELECT raw FROM trade_logs where trade_id=? AND message in ('CROSS short from binance', 'long from binance', 'increasing CROSS short from binance','increasing long from binance')", tradeId)
 
 	if err != nil {
 		return logs

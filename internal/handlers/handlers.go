@@ -33,8 +33,14 @@ func About(w http.ResponseWriter, r *http.Request) {
 func RunningTrades(w http.ResponseWriter, r *http.Request) {
 	data := make(map[string]interface{})
 	data["csrf_token"] = nosurf.Token(r)
-	data["trade_list"] = models.ListRunningTrades(app.DB)
-	data["base_url"] = app.Url
+
+	rt := models.ListRunningTrades(app.DB)
+	usdt_res, btc_res, btc_price := models.GetResultsFromLogs(app.DB)
+	data["usdt_res"] = fmt.Sprintf("%.2f", usdt_res)
+	data["btc_res"] = fmt.Sprintf("%.8f", btc_res)
+	data["btc_res_usdt"] = fmt.Sprintf("%.2f", btc_res*btc_price)
+	data["trade_list"] = rt
+
 	renderTemplate(w, "running-trades", &models.TemplateData{
 		Form: forms.New(nil),
 		Data: data,
