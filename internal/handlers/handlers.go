@@ -84,12 +84,13 @@ func RunningTrades(w http.ResponseWriter, r *http.Request) {
 
 	for i, v := range rt {
 		res := getTradeResult(v.Id)
-
-		rt[i].CurrRes = res
+		res = res - v.ValShort + v.ValLong
 		if rt[i].SymbolShort[len(rt[i].SymbolShort)-3:] == "BTC" {
-			btc_res += res - v.ValShort + v.ValLong
+			btc_res += res
+			rt[i].CurrRes = fmt.Sprintf("%.8f (%.2f)", btc_res, btc_res*btcPrice)
 		} else {
-			usdt_res += res - v.ValShort + v.ValLong
+			usdt_res += res
+			rt[i].CurrRes = fmt.Sprintf("%.2f", res)
 		}
 	}
 
@@ -121,10 +122,6 @@ func AllTrades(w http.ResponseWriter, r *http.Request) {
 	per_page := 200
 
 	lt, nt := models.ListTrades(app.DB, searchText, statuses, page, int(per_page))
-
-	for i, _ := range lt {
-		lt[i].CurrRes = getTradeResult(lt[i].Id)
-	}
 
 	data["trade_list"] = lt
 	data["num_of_trades"] = nt
