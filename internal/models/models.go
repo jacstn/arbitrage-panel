@@ -22,6 +22,8 @@ type Trade struct {
 	UpdatedAt    string
 	ValLong      float32
 	ValShort     float32
+	CurrRes      float32
+	CurrResAlt   float32
 }
 
 type TradeLog struct {
@@ -72,32 +74,17 @@ func ListRunningTrades(db *sql.DB) []Trade {
 	return trades
 }
 
-func GetResultsFromLogs(db *sql.DB) (float32, float32, float32) {
-	q := `select(select SUM((select SUM(CAST(REGEXP_SUBSTR(raw, '(?<="cummulativeQuoteQty":.")[^"]+') as REAL))
-	FROM trade_logs WHERE trade_id=trades.id AND message in ('CROSS short from binance', 'SPOT closed long info')) - 
-	(select SUM(CAST(REGEXP_SUBSTR(raw, '(?<="cummulativeQuoteQty":.")[^"]+') as REAL))
-	FROM trade_logs WHERE trade_id=trades.id AND message in ('long from binance', 'CROSS closed short info'))) from trades
-	where status in ("FINISH", "MFINISH") and  RIGHT(symbol_long,4)="USDT"),
-	(select price from prices where symbol="BTCUSDT" order by time desc limit 1),
-	(select SUM((select SUM(CAST(REGEXP_SUBSTR(raw, '(?<="cummulativeQuoteQty":.")[^"]+') as REAL))
-	FROM trade_logs WHERE trade_id=trades.id AND message in ('CROSS short from binance', 'SPOT closed long info')) - 
-	(select SUM(CAST(REGEXP_SUBSTR(raw, '(?<="cummulativeQuoteQty":.")[^"]+') as REAL))
-	FROM trade_logs WHERE trade_id=trades.id AND message in ('long from binance', 'CROSS closed short info'))) from trades
-	where status in ("FINISH", "MFINISH") and  RIGHT(symbol_long,3)="BTC")`
+func GetPrice(db *sql.DB, symbol string) float32 {
+	var price float32
 
-	var usdtRes float32
-	var btcRes float32
-	var btcPrice float32
-
-	err := db.QueryRow(q).Scan(&usdtRes, &btcPrice, &btcRes)
+	err := db.QueryRow(fmt.Sprintf("SELECT price from prices where symbol='%s' order by time desc limit 1", symbol)).Scan(&price)
 
 	if err != nil {
-		fmt.Println("cannot query from database", err)
-		return 0, 0, 0
+		fmt.Println(err)
+		return 0
 	}
 
-	return usdtRes, btcRes, btcPrice
-
+	return price
 }
 
 func ListTrades(db *sql.DB, searchText string, status string, page int, perPage int) ([]Trade, uint64) {

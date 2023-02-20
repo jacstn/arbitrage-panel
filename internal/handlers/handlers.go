@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"io/ioutil"
@@ -17,6 +18,13 @@ import (
 	"github.com/justinas/nosurf"
 )
 
+const (
+	OpenLong   = "long from binance"
+	CloseLong  = "SPOT closed long info"
+	OpenShort  = "CROSS short from binance"
+	CloseShort = "CROSS closed short info"
+)
+
 var app *config.AppConfig
 
 func NewHandlers(c *config.AppConfig) {
@@ -30,17 +38,65 @@ func About(w http.ResponseWriter, r *http.Request) {
 	renderTemplate(w, "about", &data)
 }
 
+type BinanceTransaction struct {
+	CummulativeQuoteQty string                 `json:"cummulativeQuoteQty"`
+	X                   map[string]interface{} `json:"-"`
+}
+
+func getTradeResult(tid uint64) float32 {
+	raws := models.GetLogs(app.DB, tid)
+	var res float32 = 0.0
+	for _, v := range raws {
+		if v.Message == OpenShort || v.Message == CloseLong {
+			trans := BinanceTransaction{}
+			if err := json.Unmarshal([]byte(v.Raw), &trans); err != nil {
+				fmt.Println("error while unmarshaling json", err)
+			} else if s, err := strconv.ParseFloat(trans.CummulativeQuoteQty, 64); err == nil {
+				res -= float32(s)
+			} else {
+				fmt.Println("error while float conv", err)
+			}
+		}
+
+		if v.Message == OpenLong || v.Message == CloseShort {
+			trans := BinanceTransaction{}
+			if err := json.Unmarshal([]byte(v.Raw), &trans); err != nil {
+				fmt.Println("error while unmarshaling json", err)
+			} else if s, err := strconv.ParseFloat(trans.CummulativeQuoteQty, 64); err == nil {
+				res += float32(s)
+			} else {
+				fmt.Println("error while float conv", err)
+			}
+		}
+	}
+	fmt.Println(fmt.Sprintf("returning %.4f", res))
+	return res
+}
+
 func RunningTrades(w http.ResponseWriter, r *http.Request) {
 	data := make(map[string]interface{})
 	data["csrf_token"] = nosurf.Token(r)
-
+	btcPrice := models.GetPrice(app.DB, "BTCUSDT")
 	rt := models.ListRunningTrades(app.DB)
-	usdt_res, btc_res, btc_price := models.GetResultsFromLogs(app.DB)
-	data["usdt_res"] = fmt.Sprintf("%.2f", usdt_res)
-	data["btc_res"] = fmt.Sprintf("%.8f", btc_res)
-	data["btc_res_usdt"] = fmt.Sprintf("%.2f", btc_res*btc_price)
-	data["trade_list"] = rt
 
+	var usdt_res float32 = 0.0
+	var btc_res float32 = 0.0
+
+	for i, v := range rt {
+		res := getTradeResult(v.Id)
+
+		rt[i].CurrRes = res
+		if rt[i].SymbolShort[len(rt[i].SymbolShort)-3:] == "BTC" {
+			btc_res += res - v.ValShort + v.ValLong
+		} else {
+			usdt_res += res - v.ValShort + v.ValLong
+		}
+	}
+
+	data["trade_list"] = rt
+	data["btc_res"] = btc_res
+	data["usdt_res"] = usdt_res
+	data["btc_res_usdt"] = btcPrice * btc_res
 	renderTemplate(w, "running-trades", &models.TemplateData{
 		Form: forms.New(nil),
 		Data: data,
@@ -65,6 +121,10 @@ func AllTrades(w http.ResponseWriter, r *http.Request) {
 	per_page := 200
 
 	lt, nt := models.ListTrades(app.DB, searchText, statuses, page, int(per_page))
+
+	for i, _ := range lt {
+		lt[i].CurrRes = getTradeResult(lt[i].Id)
+	}
 
 	data["trade_list"] = lt
 	data["num_of_trades"] = nt
