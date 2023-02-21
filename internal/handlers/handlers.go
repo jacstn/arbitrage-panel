@@ -109,7 +109,7 @@ func RunningTrades(w http.ResponseWriter, r *http.Request) {
 	}
 
 	sort.Slice(rt[:], func(i, j int) bool {
-		return rt[i].CurrResUsd < rt[j].CurrResUsd
+		return rt[i].CurrResUsd > rt[j].CurrResUsd
 	})
 
 	data["trade_list"] = rt
