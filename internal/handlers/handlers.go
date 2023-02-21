@@ -23,6 +23,8 @@ const (
 	CloseLong  = "SPOT closed long info"
 	OpenShort  = "CROSS short from binance"
 	CloseShort = "CROSS closed short info"
+	IncrShort  = "increasing CROSS short from binance"
+	IncrLong   = "increasing long from binance"
 )
 
 var app *config.AppConfig
@@ -43,11 +45,12 @@ type BinanceTransaction struct {
 	X                   map[string]interface{} `json:"-"`
 }
 
-func getTradeResult(tid uint64) float32 {
+func getTradeResult(tid uint64) (float32, int) {
 	raws := models.GetLogs(app.DB, tid)
 	var res float32 = 0.0
+	numOfInc := 0
 	for _, v := range raws {
-		if v.Message == OpenShort || v.Message == CloseLong {
+		if v.Message == OpenShort || v.Message == CloseLong || v.Message == IncrShort {
 			trans := BinanceTransaction{}
 			if err := json.Unmarshal([]byte(v.Raw), &trans); err != nil {
 				fmt.Println("error while unmarshaling json", err)
@@ -58,19 +61,23 @@ func getTradeResult(tid uint64) float32 {
 			}
 		}
 
-		if v.Message == OpenLong || v.Message == CloseShort {
+		if v.Message == OpenLong || v.Message == CloseShort || v.Message == IncrLong {
 			trans := BinanceTransaction{}
 			if err := json.Unmarshal([]byte(v.Raw), &trans); err != nil {
-				fmt.Println("error while unmarshaling json", err)
+				fmt.Println("error while un-marshaling json", err)
 			} else if s, err := strconv.ParseFloat(trans.CummulativeQuoteQty, 64); err == nil {
 				res += float32(s)
 			} else {
 				fmt.Println("error while float conv", err)
 			}
 		}
+
+		if v.Message == IncrLong {
+			numOfInc++
+		}
 	}
-	fmt.Println(fmt.Sprintf("returning %.4f", res))
-	return res
+
+	return res, numOfInc
 }
 
 func RunningTrades(w http.ResponseWriter, r *http.Request) {
@@ -83,15 +90,19 @@ func RunningTrades(w http.ResponseWriter, r *http.Request) {
 	var btc_res float32 = 0.0
 
 	for i, v := range rt {
-		res := getTradeResult(v.Id)
+		res, noi := getTradeResult(v.Id)
 		res = res - v.ValShort + v.ValLong
 		if rt[i].SymbolShort[len(rt[i].SymbolShort)-3:] == "BTC" {
 			btc_res += res
-			rt[i].CurrRes = fmt.Sprintf("%.8f (%.2f)", btc_res, btc_res*btcPrice)
+			rt[i].CurrRes = res
+			rt[i].CurrResDisp = fmt.Sprintf("%.8f (%.2f)", btc_res, btc_res*btcPrice)
 		} else {
 			usdt_res += res
-			rt[i].CurrRes = fmt.Sprintf("%.2f", res)
+			rt[i].CurrRes = res
+			rt[i].CurrResDisp = fmt.Sprintf("%.2f", res)
 		}
+
+		rt[i].IncNo = noi
 	}
 
 	data["trade_list"] = rt
@@ -188,7 +199,6 @@ func ListFiles(w http.ResponseWriter, r *http.Request) {
 	}
 	var fl []string
 	for _, f := range files {
-		fmt.Println()
 		name := f.Name()
 		if strings.Contains(name, ".csv") {
 			fl = append(fl, f.Name())

@@ -22,7 +22,9 @@ type Trade struct {
 	UpdatedAt    string
 	ValLong      float32
 	ValShort     float32
-	CurrRes      string
+	CurrRes      float32
+	CurrResDisp  string
+	IncNo        int
 }
 
 type TradeLog struct {
