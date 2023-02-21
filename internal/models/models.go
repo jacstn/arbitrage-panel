@@ -45,8 +45,6 @@ type BnbTrans struct {
 }
 
 func ListRunningTrades(db *sql.DB) []Trade {
-	trades := []Trade{}
-
 	res, err := db.Query(`SELECT (select price from prices where symbol=symbol_long ORDER BY time DESC LIMIT 1) * qty_long as val_long, 
 	(select price from prices where symbol=symbol_short ORDER BY time DESC LIMIT 1) * qty_short as val_short, 
 	id, status, symbol_long, symbol_short, time_origin, open_diff, qty_long, qty_short, openedAt, 
@@ -57,6 +55,7 @@ func ListRunningTrades(db *sql.DB) []Trade {
 		return []Trade{}
 	}
 
+	trades := []Trade{}
 	for res.Next() {
 		var trade Trade
 		err := res.Scan(&trade.ValLong, &trade.ValShort,
@@ -78,7 +77,7 @@ func ListRunningTrades(db *sql.DB) []Trade {
 func GetPrice(db *sql.DB, symbol string) float32 {
 	var price float32
 
-	err := db.QueryRow(fmt.Sprintf("SELECT price from prices where symbol='%s' order by time desc limit 1", symbol)).Scan(&price)
+	err := db.QueryRow(fmt.Sprintf("SELECT price FROM prices WHERE symbol='%s' order by time desc limit 1", symbol)).Scan(&price)
 
 	if err != nil {
 		fmt.Println(err)

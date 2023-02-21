@@ -95,7 +95,7 @@ func RunningTrades(w http.ResponseWriter, r *http.Request) {
 		if rt[i].SymbolShort[len(rt[i].SymbolShort)-3:] == "BTC" {
 			btc_res += res
 			rt[i].CurrRes = res
-			rt[i].CurrResDisp = fmt.Sprintf("%.8f (%.2f)", btc_res, btc_res*btcPrice)
+			rt[i].CurrResDisp = fmt.Sprintf("%.8f (%.2f)", res, res*btcPrice)
 		} else {
 			usdt_res += res
 			rt[i].CurrRes = res
