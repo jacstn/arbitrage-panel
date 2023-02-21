@@ -23,6 +23,7 @@ type Trade struct {
 	ValLong      float32
 	ValShort     float32
 	CurrRes      float32
+	CurrResUsd   float32
 	CurrResDisp  string
 	IncNo        int
 }
