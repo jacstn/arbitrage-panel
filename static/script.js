@@ -1,11 +1,12 @@
 var toggle = 0
 currId = 0
 function tableclick(id) {
+  $("#transaction-logs").remove()
   if (toggle && currId===id) {
     toggle = 0
-    $("#transaction-logs").remove()
     return
   }
+
   toggle = 1
   currId = id
   console.log(id)
