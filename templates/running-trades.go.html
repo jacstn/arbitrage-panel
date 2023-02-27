@@ -33,16 +33,18 @@
       .IncNo
       0
       }}
-      class="table-warning"
+      class="table-info"
       {{end}}
     >
       <th onclick="tableclick({{ .Id }})" scope="row">{{ .Id }}</th>
-      <td {{if gt .CurrRes 0.0}} class="table-success" {{end}}>
+      <td {{if gt .CurrRes 0.0}} class="table-success" {{ end }}>
         {{ .CurrResDisp}} {{if gt .IncNo 1}}
-        <span class="badge bg-secondary">{{.IncNo}}</span>
+        <span class="badge bg-secondary">{{ .IncNo }}</span>
         {{end}}
       </td>
-      <td>{{ .HoursToClose}}</td>
+      <td {{if lt .HoursToClose 10}} class="table-warning" {{ end }}>
+        {{ .HoursToClose}}
+      </td>
       <td>{{ .SymbolLong}}</td>
       <td class="d-none d-sm-none d-md-block">{{ .QtyLong }}</td>
       <td>{{ .SymbolShort}}</td>

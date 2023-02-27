@@ -18,7 +18,7 @@ type Trade struct {
 	QtyShort     float32
 	OpenedAt     string
 	OpenedAgo    string
-	HoursToClose string
+	HoursToClose int16
 	UpdatedAt    string
 	ValLong      float32
 	ValShort     float32
