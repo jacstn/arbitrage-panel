@@ -1,4 +1,13 @@
+var toggle = 0
+currId = 0
 function tableclick(id) {
+  if (toggle && currId===id) {
+    toggle = 0
+    $("#transaction-logs").remove()
+    return
+  }
+  toggle = 1
+  currId = id
   console.log(id)
   var html;
   $.ajax({
@@ -23,7 +32,12 @@ function tableclick(id) {
           html += `
                   <tr>
                     <td>${el.Id}</td>
-                    <td>${el.Ago}</td>
+                    <td
+                    data-bs-toggle="tooltip"
+                    data-bs-placement="top"
+                    data-bs-custom-class="custom-tooltip"
+                    data-bs-title="${el.CreatedAt}"
+                    >${el.Ago}</td>
                     <td>${el.Category}</td>
                     <td>${el.Message}</td>
                     <td>${el.Raw}</td>
@@ -34,9 +48,12 @@ function tableclick(id) {
           </table>`
 
 
-        $("#transaction-logs").remove()
-
         $('#transaction-row-' + id).after(`<tr id="transaction-logs"><td colspan="6">${html}</td></tr>`);
+
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+        })
 
       } else {
         html = "no logs found"
