@@ -42,11 +42,11 @@
         <span class="badge bg-secondary">{{.IncNo}}</span>
         {{end}}
       </td>
-      <td>{{ .OpenedAgo}}</td>
+      <td>{{ .HoursToClose}}</td>
       <td>{{ .SymbolLong}}</td>
-      <td class="d-none d-sm-none d-md-block">{{ .QtyLong}}</td>
+      <td class="d-none d-sm-none d-md-block">{{ .QtyLong }}</td>
       <td>{{ .SymbolShort}}</td>
-      <td class="d-none d-sm-none d-md-block">{{ .QtyShort}}</td>
+      <td class="d-none d-sm-none d-md-block">{{ .QtyShort }}</td>
       <td>{{.OpenedAt}}</td>
     </tr>
     {{end}}

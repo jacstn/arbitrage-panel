@@ -46,10 +46,12 @@ type BnbTrans struct {
 }
 
 func ListRunningTrades(db *sql.DB) []Trade {
-	res, err := db.Query(`SELECT (select price from prices where symbol=symbol_long ORDER BY time DESC LIMIT 1) * qty_long as val_long, 
-	(select price from prices where symbol=symbol_short ORDER BY time DESC LIMIT 1) * qty_short as val_short, 
-	id, status, symbol_long, symbol_short, time_origin, open_diff, qty_long, qty_short, openedAt, 
-	hours_to_close - HOUR(TIMEDIFF(NOW(), openedAt)) AS hrtoclose, updatedAt FROM trades where status in ('RUNNING', 'MANUAL') ORDER BY openedAt DESC`)
+	res, err := db.Query(`SELECT 
+	(SELECT price FROM prices where symbol=symbol_long ORDER BY time DESC LIMIT 1) * qty_long as val_long, 
+	(SELECT price FROM prices where symbol=symbol_short ORDER BY time DESC LIMIT 1) * qty_short as val_short, 
+	id, status, symbol_long, symbol_short, qty_long, qty_short, openedAt, 
+	hours_to_close - HOUR(TIMEDIFF(NOW(), openedAt)) AS hrtoclose, updatedAt FROM trades 
+	WHERE status in ('RUNNING', 'MANUAL') ORDER BY openedAt DESC`)
 
 	if err != nil {
 		fmt.Println("cannot query from database", err)
@@ -61,7 +63,7 @@ func ListRunningTrades(db *sql.DB) []Trade {
 		var trade Trade
 		err := res.Scan(&trade.ValLong, &trade.ValShort,
 			&trade.Id, &trade.Status, &trade.SymbolLong,
-			&trade.SymbolShort, &trade.TimeOrigin, &trade.OpenDiff,
+			&trade.SymbolShort,
 			&trade.QtyLong, &trade.QtyShort, &trade.OpenedAt,
 			&trade.HoursToClose,
 			&trade.UpdatedAt)
