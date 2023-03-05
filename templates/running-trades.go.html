@@ -82,7 +82,7 @@
     if (xhr.status === 200) {
       const resp = JSON.parse(xhr.response);
       if (resp.msg==="trade succesfully closed") {
-        console.log(resp.data);
+        console.log(resp);
         const element = document.getElementById("close-link-"+resp.data);
         element.parentNode.removeChild(element);
       }
