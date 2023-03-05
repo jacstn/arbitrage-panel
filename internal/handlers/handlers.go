@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"os/exec"
 	"sort"
 	"strconv"
 	"strings"
@@ -187,6 +188,34 @@ func Market(w http.ResponseWriter, r *http.Request) {
 		Form: forms.New(nil),
 		Data: data,
 	})
+}
+
+type ScriptResponse struct {
+	Status  string `json:"status"`
+	Message string `json:"msg"`
+	Data    string `json:"data"`
+}
+
+func CloseTrade(w http.ResponseWriter, r *http.Request) {
+	trade_id := chi.URLParam(r, "id")
+
+	fmt.Println(os.Getenv("ARBITRAGE_PY"))
+	cmd := exec.Command(os.Getenv("ARBITRAGE_PY"), fmt.Sprintf("%s/trading-panel-actions.py",
+		os.Getenv("ARBITRAGE_PY_DIR")), "close_trade", trade_id)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		fmt.Println("error whle executing command")
+	}
+
+	var unmarshalled ScriptResponse
+
+	err = json.Unmarshal([]byte(out), &unmarshalled)
+	if err != nil {
+		fmt.Println("error whlile parsing python script response")
+	}
+
+	fmt.Println("closed trade, result", unmarshalled)
+	render.JSON(w, r, unmarshalled)
 }
 
 func ListFiles(w http.ResponseWriter, r *http.Request) {

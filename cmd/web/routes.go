@@ -22,6 +22,7 @@ func routes() *chi.Mux {
 	mux.Get("/get-logs/{id}", handlers.GetLogs)
 	mux.Get("/market", handlers.Market)
 	mux.Get("/list-files", handlers.ListFiles)
+	mux.Get("/close-trade/{id}", handlers.CloseTrade)
 
 	mux.Handle("/static/*", http.StripPrefix("/static", http.FileServer(http.Dir("./static"))))
 

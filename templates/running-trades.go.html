@@ -22,6 +22,7 @@
       <th scope="col">Short</th>
       <th scope="col" class="d-none d-sm-none d-md-block">Qty Short</th>
       <th scope="col">Opened</th>
+      <th scope="col">Action</th>
     </tr>
   </thead>
   <tbody>
@@ -50,13 +51,26 @@
       <td>{{ .SymbolShort}}</td>
       <td class="d-none d-sm-none d-md-block">{{ .QtyShort }}</td>
       <td>{{.OpenedAt}}</td>
+      <td>
+        <a id="close-link-{{.Id}}" href="#" onclick="event.preventDefault();  closeTrade({{.Id}})">Close</button>
+      </td>
     </tr>
     {{end}}
   </tbody>
 </table>
 {{end}}
+
 <script>
   const xhr = new XMLHttpRequest();
+  function closeTrade(id) {
+    console.log(id);
+    
+    xhr.open("GET", "/close-trade/" + id);
+    xhr.send();
+    return false
+  }
+
+
   function tradeDetails(id) {
     console.log(id);
     xhr.open("GET", "/get-logs/" + id);
@@ -66,11 +80,14 @@
 
   xhr.addEventListener("load", () => {
     if (xhr.status === 200) {
-      console.log(JSON.parse(xhr.response));
+      const resp = JSON.parse(xhr.response);
+      if (resp.msg==="trade succesfully closed") {
+        console.log(resp.data);
+        const element = document.getElementById("close-link-"+resp.data);
+        element.parentNode.removeChild(element);
+      }
     } else {
       console.log(xhr.status);
     }
   });
-
-  function addLogs(id, logs) {}
 </script>
