@@ -52,7 +52,12 @@
       <td class="d-none d-sm-none d-md-block">{{ .QtyShort }}</td>
       <td>{{.OpenedAt}}</td>
       <td>
-        <a id="close-link-{{.Id}}" href="#" onclick="event.preventDefault();  closeTrade({{.Id}})">Close</button>
+        <a
+          id="close-link-{{.Id}}"
+          href="#"
+          onclick="event.preventDefault();  closeTrade({{.Id}})"
+          >Close</a
+        >
       </td>
     </tr>
     {{end}}
@@ -62,14 +67,27 @@
 
 <script>
   const xhr = new XMLHttpRequest();
+  let selectedToClose = undefined;
   function closeTrade(id) {
+    const newEl = document.getElementById("close-link-" + id);
+
+    if (selectedToClose !== id) {
+      const oldEl = document.getElementById("close-link-" + selectedToClose);
+      if (oldEl) {
+        oldEl.className = "";
+      }
+      selectedToClose = id;
+
+      newEl.className = "btn btn-danger btn-sm";
+      return;
+    }
+    newEl.className = "";
     console.log(id);
-    
+
     xhr.open("GET", "/close-trade/" + id);
     xhr.send();
-    return false
+    return false;
   }
-
 
   function tradeDetails(id) {
     console.log(id);
@@ -81,9 +99,9 @@
   xhr.addEventListener("load", () => {
     if (xhr.status === 200) {
       const resp = JSON.parse(xhr.response);
-      if (resp.msg==="trade succesfully closed") {
+      if (resp.msg === "trade succesfully closed") {
         console.log(resp);
-        const element = document.getElementById("close-link-"+resp.data);
+        const element = document.getElementById("close-link-" + resp.data);
         element.parentNode.removeChild(element);
       }
     } else {

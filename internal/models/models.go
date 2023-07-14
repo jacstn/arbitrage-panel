@@ -190,7 +190,17 @@ func GetBinanceTransactionsFromLogs(db *sql.DB, tradeId uint64) []TradeLog {
 func GetTradeById(db *sql.DB, id uint64) Trade {
 	var trade Trade
 
-	err := db.QueryRow(fmt.Sprintf("SELECT id, status, symbol_long, symbol_short, time_origin, open_diff, qty_long, qty_short, openedAt, TIMEDIFF(NOW(), openedAt) AS opened_ago, updatedAt FROM trades where id=%d", id)).Scan(&trade.Id, &trade.Status, &trade.SymbolLong, &trade.SymbolShort, &trade.TimeOrigin, &trade.OpenDiff, &trade.QtyLong, &trade.QtyShort, &trade.OpenedAt, &trade.OpenedAgo, &trade.UpdatedAt)
+	err := db.QueryRow(fmt.Sprintf(`SELECT 
+	(SELECT price FROM prices where symbol=symbol_long ORDER BY time DESC LIMIT 1) * qty_long as val_long, 
+	(SELECT price FROM prices where symbol=symbol_short ORDER BY time DESC LIMIT 1) * qty_short as val_short, 
+	id, status, symbol_long, symbol_short, qty_long, qty_short, openedAt, 
+	hours_to_close - HOUR(TIMEDIFF(NOW(), openedAt)) AS hrtoclose, updatedAt FROM trades 
+	WHERE id=%d`, id)).Scan(&trade.ValLong, &trade.ValShort,
+		&trade.Id, &trade.Status, &trade.SymbolLong,
+		&trade.SymbolShort,
+		&trade.QtyLong, &trade.QtyShort, &trade.OpenedAt,
+		&trade.HoursToClose,
+		&trade.UpdatedAt)
 
 	if err != nil {
 		fmt.Println(err)

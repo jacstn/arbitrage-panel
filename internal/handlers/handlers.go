@@ -165,7 +165,7 @@ func GetLogs(w http.ResponseWriter, r *http.Request) {
 	render.JSON(w, r, data)
 }
 
-func GetTradeById(w http.ResponseWriter, r *http.Request) {
+func TradeDetails(w http.ResponseWriter, r *http.Request) {
 	data := make(map[string]interface{})
 	id, err := strconv.Atoi(chi.URLParam(r, "id"))
 
@@ -176,7 +176,7 @@ func GetTradeById(w http.ResponseWriter, r *http.Request) {
 
 	data["trade"] = models.GetTradeById(app.DB, uint64(id))
 
-	renderTemplate(w, "trade_detail", &models.TemplateData{
+	renderTemplate(w, "trade-details", &models.TemplateData{
 		Form: forms.New(nil),
 		Data: data,
 	})
