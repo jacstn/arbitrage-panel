@@ -44,7 +44,10 @@
         {{end}}
       </td>
       <td {{if lt .HoursToClose 10}} class="table-warning" {{ end }}>
-        {{ .HoursToClose}} <span class="badge bg-secondary">{{ .ShouldCloseAgo }}</span>
+        {{ .HoursToClose}} 
+        {{if lt .ShouldCloseAgo 0}}
+        <span class="badge bg-secondary">{{ .ShouldCloseAgo }}</span>
+        {{ end }}
       </td>
       <td>{{ .SymbolLong}}</td>
       <td class="d-none d-sm-none d-md-block">{{ .QtyLong }}</td>
