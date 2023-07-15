@@ -8,24 +8,26 @@ import (
 )
 
 type Trade struct {
-	Id           uint64
-	Status       string
-	SymbolLong   string
-	SymbolShort  string
-	TimeOrigin   string
-	OpenDiff     float32
-	QtyLong      float32
-	QtyShort     float32
-	OpenedAt     string
-	OpenedAgo    string
-	HoursToClose int16
-	UpdatedAt    string
-	ValLong      float32
-	ValShort     float32
-	CurrRes      float32
-	CurrResUsd   float32
-	CurrResDisp  string
-	IncNo        int
+	Id             uint64
+	Status         string
+	SymbolLong     string
+	SymbolShort    string
+	TimeOrigin     string
+	OpenDiff       float32
+	QtyLong        float32
+	QtyShort       float32
+	OpenedAt       string
+	OpenedAgo      string
+	OpenedAgoHr    uint16
+	HoursToClose   int16
+	UpdatedAt      string
+	ValLong        float32
+	ValShort       float32
+	CurrRes        float32
+	CurrResUsd     float32
+	CurrResDisp    string
+	IncNo          int
+	ShouldCloseAgo int
 }
 
 type TradeLog struct {
@@ -50,7 +52,7 @@ func ListRunningTrades(db *sql.DB) []Trade {
 	res, err := db.Query(`SELECT 
 	(SELECT price FROM prices where symbol=symbol_long ORDER BY time DESC LIMIT 1) * qty_long as val_long, 
 	(SELECT price FROM prices where symbol=symbol_short ORDER BY time DESC LIMIT 1) * qty_short as val_short, 
-	id, status, symbol_long, symbol_short, qty_long, qty_short, openedAt, 
+	id, status, symbol_long, symbol_short, qty_long, qty_short, openedAt, HOUR(TIMEDIFF(NOW(), openedAt)) as openedAgoHour,
 	hours_to_close - HOUR(TIMEDIFF(NOW(), openedAt)) AS hrtoclose, updatedAt FROM trades 
 	WHERE status in ('RUNNING', 'MANUAL') ORDER BY openedAt DESC`)
 
@@ -66,9 +68,10 @@ func ListRunningTrades(db *sql.DB) []Trade {
 			&trade.Id, &trade.Status, &trade.SymbolLong,
 			&trade.SymbolShort,
 			&trade.QtyLong, &trade.QtyShort, &trade.OpenedAt,
+			&trade.OpenedAgoHr,
 			&trade.HoursToClose,
 			&trade.UpdatedAt)
-
+		trade.ShouldCloseAgo = 75 - int(trade.OpenedAgoHr)
 		if err != nil {
 			fmt.Println(err)
 		}

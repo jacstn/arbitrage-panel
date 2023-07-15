@@ -16,7 +16,7 @@
     <tr>
       <th scope="col">#</th>
       <th scope="col">Curr Res</th>
-      <th scope="col">Hr To Close</th>
+      <th scope="col">Hr To Close </th>
       <th scope="col">Long</th>
       <th scope="col" class="d-none d-sm-none d-md-block">Qty Long</th>
       <th scope="col">Short</th>
@@ -44,7 +44,7 @@
         {{end}}
       </td>
       <td {{if lt .HoursToClose 10}} class="table-warning" {{ end }}>
-        {{ .HoursToClose}}
+        {{ .HoursToClose}} <span class="badge bg-secondary">{{ .ShouldCloseAgo }}</span>
       </td>
       <td>{{ .SymbolLong}}</td>
       <td class="d-none d-sm-none d-md-block">{{ .QtyLong }}</td>
