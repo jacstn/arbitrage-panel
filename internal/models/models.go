@@ -8,19 +8,23 @@ import (
 )
 
 type Trade struct {
-	Id             uint64
-	Status         string
-	SymbolLong     string
-	SymbolShort    string
-	TimeOrigin     string
-	OpenDiff       float32
-	QtyLong        float32
-	QtyShort       float32
-	OpenedAt       string
-	OpenedAgo      string
-	OpenedAgoHr    uint16
-	HoursToClose   int16
-	UpdatedAt      string
+	// database elements
+	Id           uint64
+	Status       string
+	SymbolLong   string
+	SymbolShort  string
+	TimeOrigin   string
+	TargetDiff   float32
+	OpenDiff     float32
+	QtyLong      float32
+	QtyShort     float32
+	OpenedAt     string
+	OpenedAgo    string
+	OpenedAgo_Hr uint16
+	HoursToClose int16
+	UpdatedAt    string
+
+	// calculated
 	ValLong        float32
 	ValShort       float32
 	CurrRes        float32
@@ -28,6 +32,7 @@ type Trade struct {
 	CurrResDisp    string
 	IncNo          int
 	ShouldCloseAgo int
+	OpenedAgoHr    int
 }
 
 type TradeLog struct {
@@ -48,11 +53,19 @@ type BnbTrans struct {
 	Mode      string
 }
 
+func getTradeValueAtPlannedClose(db *sql.DB, trade Trade) {
+	transactions := GetBinanceTransactionsFromLogs(db, trade.Id)
+	for _, v := range transactions {
+		fmt.Println(v)
+
+	}
+}
+
 func ListRunningTrades(db *sql.DB) []Trade {
 	res, err := db.Query(`SELECT 
 	(SELECT price FROM prices where symbol=symbol_long ORDER BY time DESC LIMIT 1) * qty_long as val_long, 
 	(SELECT price FROM prices where symbol=symbol_short ORDER BY time DESC LIMIT 1) * qty_short as val_short, 
-	id, status, symbol_long, symbol_short, qty_long, qty_short, openedAt, HOUR(TIMEDIFF(NOW(), openedAt)) as openedAgoHour,
+	id, status, symbol_long, symbol_short, qty_long, qty_short, openedAt, hours_to_close as hoursToCloseOpt, HOUR(TIMEDIFF(NOW(), openedAt)) as openedAgoHour,
 	hours_to_close - HOUR(TIMEDIFF(NOW(), openedAt)) AS hrtoclose, updatedAt FROM trades 
 	WHERE status in ('RUNNING', 'MANUAL') ORDER BY openedAt DESC`)
 
@@ -67,7 +80,7 @@ func ListRunningTrades(db *sql.DB) []Trade {
 		err := res.Scan(&trade.ValLong, &trade.ValShort,
 			&trade.Id, &trade.Status, &trade.SymbolLong,
 			&trade.SymbolShort,
-			&trade.QtyLong, &trade.QtyShort, &trade.OpenedAt,
+			&trade.QtyLong, &trade.QtyShort, &trade.OpenedAt, &trade.HoursToClose,
 			&trade.OpenedAgoHr,
 			&trade.HoursToClose,
 			&trade.UpdatedAt)
@@ -75,6 +88,7 @@ func ListRunningTrades(db *sql.DB) []Trade {
 		if err != nil {
 			fmt.Println(err)
 		}
+
 		trades = append(trades, trade)
 	}
 
@@ -85,6 +99,19 @@ func GetPrice(db *sql.DB, symbol string) float32 {
 	var price float32
 
 	err := db.QueryRow(fmt.Sprintf("SELECT price FROM prices WHERE symbol='%s' order by time desc limit 1", symbol)).Scan(&price)
+
+	if err != nil {
+		fmt.Println(err)
+		return 0
+	}
+
+	return price
+}
+
+func GetPriceAt(db *sql.DB, symbol string, trade Trade) float32 {
+	var price float32
+
+	err := db.QueryRow(fmt.Sprintf("SELECT price FROM prices WHERE symbol='%s' and time<('%s' + interval %d day) order by time desc limit 1", symbol, trade.OpenedAt, trade.HoursToClose)).Scan(&price)
 
 	if err != nil {
 		fmt.Println(err)
@@ -165,6 +192,16 @@ func GetLogs(db *sql.DB, tradeId uint64) []TradeLog {
 	}
 
 	return logs
+}
+
+func DelayTrade(db *sql.DB, tradeId string) Trade {
+	var htc int32
+	db.QueryRow("SELECT hours_to_close FROM trades where id=?", tradeId).Scan(&htc)
+
+	fmt.Println(htc)
+	htc += 24
+	db.Exec("UPDATE trades set hours_to_close=? WHERE id=?", htc, tradeId)
+	return Trade{}
 }
 
 func GetBinanceTransactionsFromLogs(db *sql.DB, tradeId uint64) []TradeLog {

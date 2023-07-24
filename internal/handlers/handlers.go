@@ -196,6 +196,17 @@ type ScriptResponse struct {
 	Data    string `json:"data"`
 }
 
+func DelayTrade(w http.ResponseWriter, r *http.Request) {
+	trade_id := chi.URLParam(r, "id")
+
+	models.DelayTrade(app.DB, trade_id)
+
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	err_ret := fmt.Sprintf("{\"status\": \"err\",\"trade_id\":%s}", trade_id)
+	w.Write([]byte(err_ret))
+}
+
 func CloseTrade(w http.ResponseWriter, r *http.Request) {
 	trade_id := chi.URLParam(r, "id")
 
@@ -204,7 +215,9 @@ func CloseTrade(w http.ResponseWriter, r *http.Request) {
 		os.Getenv("ARBITRAGE_PY_DIR")), "close_trade", trade_id)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		fmt.Println("error whle executing command")
+		w.WriteHeader(http.StatusOK)
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte("{\"err\":1}"))
 	}
 
 	var unmarshalled ScriptResponse
