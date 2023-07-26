@@ -37,7 +37,14 @@
       class="table-info"
       {{end}}
     >
-      <th onclick="tableclick({{ .Id }})" scope="row">{{ .Id }}</th>
+      <th onclick="tableclick({{ .Id }})" scope="row">{{ .Id }}
+      <span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-eye-fill" viewBox="0 0 16 16">
+          <path d="M10.5 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z"/>
+          <path d="M0 8s3-5.5 8-5.5S16 8 16 8s-3 5.5-8 5.5S0 8 0 8zm8 3.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/>
+        </svg>
+      </span>
+      </th>
       <td {{if gt .CurrRes 0.0}} class="table-success" {{ end }}>
         {{ .CurrResDisp}} {{if gt .IncNo 1}}
         <span class="badge bg-secondary">{{ .IncNo }}</span>
@@ -75,72 +82,5 @@
 {{end}}
 
 <script>
-  const xhr = new XMLHttpRequest();
-  let selectedToClose = undefined;
 
-  function onLoadEnd(e) {
-    const res = JSON.parse(e.target.responseText);
-    if (res.status === "err") {
-      console.log("error while delaying", res)
-      addDangerAlert("error while delaying trade", res.trade_id)
-    }
-  }
-
-  function delay(id) {
-    xhr.open("GET", "/delay-trade/" + id);
-    xhr.send();
-    xhr.addEventListener("loadend", onLoadEnd);
-    return false;
-  }
-
-
-  function addDangerAlert( msg, id) {
-    $("#transaction-row-" + id).after(
-          `<tr id="transaction-logs"><td colspan="9">
-            <div class="alert alert-danger" role="alert">
-  ${msg}</div>
-            </td></tr>`
-        );
-  }
-
-  function closeTrade(id) {
-    const newEl = document.getElementById("close-link-" + id);
-
-    if (selectedToClose !== id) {
-      const oldEl = document.getElementById("close-link-" + selectedToClose);
-      if (oldEl) {
-        oldEl.className = "";
-      }
-      selectedToClose = id;
-
-      newEl.className = "btn btn-danger btn-sm";
-      return;
-    }
-    newEl.className = "";
-    console.log(id);
-
-    xhr.open("GET", "/close-trade/" + id);
-    xhr.send();
-    return false;
-  }
-
-  function tradeDetails(id) {
-    console.log(id);
-    xhr.open("GET", "/get-logs/" + id);
-    xhr.send();
-    xhr.on;
-  }
-
-  xhr.addEventListener("load", () => {
-    if (xhr.status === 200) {
-      const resp = JSON.parse(xhr.response);
-      if (resp.msg === "trade succesfully closed") {
-        console.log(resp);
-        const element = document.getElementById("close-link-" + resp.data);
-        element.parentNode.removeChild(element);
-      }
-    } else {
-      console.log(xhr.status);
-    }
-  });
 </script>

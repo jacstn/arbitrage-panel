@@ -1,5 +1,76 @@
 var toggle = 0;
 currId = 0;
+
+const xhr = new XMLHttpRequest();
+
+function onDelayRequestEnd(e) {
+  const res = JSON.parse(e.target.responseText);
+  if (res.status === "err") {
+    console.log("error while delaying", res);
+  } else if (res.status == "ok") {
+    addSuccessAlert("ok", res.trade_id);
+  }
+}
+
+let selectedToClose = undefined;
+
+function addSuccessAlert(msg, id) {
+  $("#transaction-row-" + id).after(
+    `<tr id="transaction-logs"><td colspan="9">
+          <div class="alert alert-success" role="alert">
+${msg}</div>
+          </td></tr>`
+  );
+}
+
+function closeTrade(id) {
+  const newEl = document.getElementById("close-link-" + id);
+
+  if (selectedToClose !== id) {
+    const oldEl = document.getElementById("close-link-" + selectedToClose);
+    if (oldEl) {
+      oldEl.className = "";
+    }
+    selectedToClose = id;
+
+    newEl.className = "btn btn-danger btn-sm";
+    return;
+  }
+  newEl.className = "";
+  console.log(id);
+
+  xhr.open("GET", "/close-trade/" + id);
+  xhr.send();
+  return false;
+}
+
+function tradeDetails(id) {
+  console.log(id);
+  xhr.open("GET", "/get-logs/" + id);
+  xhr.send();
+  xhr.on;
+}
+
+xhr.addEventListener("load", () => {
+  if (xhr.status === 200) {
+    const resp = JSON.parse(xhr.response);
+    if (resp.msg === "trade succesfully closed") {
+      console.log(resp);
+      const element = document.getElementById("close-link-" + resp.data);
+      element.parentNode.removeChild(element);
+    }
+  } else {
+    console.log(xhr.status);
+  }
+});
+
+function delay(id) {
+  xhr.open("GET", "/delay-trade/" + id);
+  xhr.send();
+  xhr.addEventListener("loadend", onDelayRequestEnd);
+  return false;
+}
+
 function tableclick(id) {
   console.log("asdfasdfsad");
 

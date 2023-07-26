@@ -203,7 +203,7 @@ func DelayTrade(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
-	err_ret := fmt.Sprintf("{\"status\": \"err\",\"trade_id\":%s}", trade_id)
+	err_ret := fmt.Sprintf("{\"status\": \"ok\",\"trade_id\":%s}", trade_id)
 	w.Write([]byte(err_ret))
 }
 
