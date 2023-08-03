@@ -8,10 +8,12 @@ import (
 )
 
 type AppConfig struct {
-	UseCache   bool
-	InfoLog    *log.Logger
-	Production bool
-	Session    *scs.SessionManager
-	DB         *sql.DB
-	Url        string
+	UseCache         bool
+	InfoLog          *log.Logger
+	Production       bool
+	Session          *scs.SessionManager
+	DB               *sql.DB
+	Url              string
+	PythonScriptsDir string
+	PythonExecuteCmd string
 }

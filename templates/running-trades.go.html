@@ -18,32 +18,22 @@
       <th scope="col">Curr Res</th>
       <th scope="col">Hr To Close </th>
       <th scope="col">Long</th>
-      <th scope="col" class="d-none d-sm-none d-md-block">Qty Long</th>
       <th scope="col">Short</th>
-      <th scope="col" class="d-none d-sm-none d-md-block">Qty Short</th>
       <th scope="col">Opened</th>
       <th scope="col">Action</th>
     </tr>
   </thead>
   <tbody>
     {{range index .Data "trade_list"}}
-    <tr
-      id="transaction-row-{{.Id}}"
-      {{if
-      gt
-      .IncNo
-      0
-      }}
-      class="table-info"
-      {{end}}
-    >
-      <th onclick="tableclick({{ .Id }})" scope="row">{{ .Id }}
-      <span>
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-eye-fill" viewBox="0 0 16 16">
-          <path d="M10.5 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z"/>
-          <path d="M0 8s3-5.5 8-5.5S16 8 16 8s-3 5.5-8 5.5S0 8 0 8zm8 3.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/>
-        </svg>
-      </span>
+    <tr id="transaction-row-{{.Id}}" {{if gt .IncNo 0 }} class="table-info" {{end}}>
+      <th scope="row">{{ .Id }}
+        <span onclick="showTradeDetails ({{ .Id }})">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-eye-fill"
+            viewBox="0 0 16 16">
+            <path d="M10.5 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z" />
+            <path d="M0 8s3-5.5 8-5.5S16 8 16 8s-3 5.5-8 5.5S0 8 0 8zm8 3.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z" />
+          </svg>
+        </span>
       </th>
       <td {{if gt .CurrRes 0.0}} class="table-success" {{ end }}>
         {{ .CurrResDisp}} {{if gt .IncNo 1}}
@@ -51,36 +41,133 @@
         {{end}}
       </td>
       <td {{if lt .HoursToClose 10}} class="table-warning" {{ end }}>
-        {{ .HoursToClose}} 
+        {{ .HoursToClose}}
         {{ if lt .ShouldCloseAgo 0 }}
         <span class="badge bg-secondary">{{ .ShouldCloseAgo }}</span>
         {{ end }}
-        <span  onclick="delay({{ .Id }}); return false">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-stopwatch" viewBox="0 0 16 16">
-          <path d="M8.5 5.6a.5.5 0 1 0-1 0v2.9h-3a.5.5 0 0 0 0 1H8a.5.5 0 0 0 .5-.5V5.6z"/>
-          <path d="M6.5 1A.5.5 0 0 1 7 .5h2a.5.5 0 0 1 0 1v.57c1.36.196 2.594.78 3.584 1.64a.715.715 0 0 1 .012-.013l.354-.354-.354-.353a.5.5 0 0 1 .707-.708l1.414 1.415a.5.5 0 1 1-.707.707l-.353-.354-.354.354a.512.512 0 0 1-.013.012A7 7 0 1 1 7 2.071V1.5a.5.5 0 0 1-.5-.5zM8 3a6 6 0 1 0 .001 12A6 6 0 0 0 8 3z"/>
-        </svg>
-      </span>
+        <span onclick="delay({{ .Id }}); return false">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-stopwatch"
+            viewBox="0 0 16 16">
+            <path d="M8.5 5.6a.5.5 0 1 0-1 0v2.9h-3a.5.5 0 0 0 0 1H8a.5.5 0 0 0 .5-.5V5.6z" />
+            <path
+              d="M6.5 1A.5.5 0 0 1 7 .5h2a.5.5 0 0 1 0 1v.57c1.36.196 2.594.78 3.584 1.64a.715.715 0 0 1 .012-.013l.354-.354-.354-.353a.5.5 0 0 1 .707-.708l1.414 1.415a.5.5 0 1 1-.707.707l-.353-.354-.354.354a.512.512 0 0 1-.013.012A7 7 0 1 1 7 2.071V1.5a.5.5 0 0 1-.5-.5zM8 3a6 6 0 1 0 .001 12A6 6 0 0 0 8 3z" />
+          </svg>
+        </span>
       </td>
       <td>{{ .SymbolLong}}</td>
-      <td class="d-none d-sm-none d-md-block">{{ .QtyLong }}</td>
       <td>{{ .SymbolShort}}</td>
-      <td class="d-none d-sm-none d-md-block">{{ .QtyShort }}</td>
-      <td>{{.OpenedAt}}</td>
+      <td>{{ .OpenedAt }}</td>
       <td>
-        <a
-          id="close-link-{{.Id}}"
-          href="#"
-          onclick="event.preventDefault();  closeTrade({{.Id}})"
-          >Close</a
-        >
+        <a id="close-link-{{.Id}}" href="#" onclick="event.preventDefault();  closeTrade({{.Id}})">Close</a>
       </td>
     </tr>
     {{end}}
   </tbody>
 </table>
-{{end}}
+
+
+<!-- Modal -->
+<!-- Modal -->
+<div class="modal fade" id="tradeDetailsModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+  aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="tradeDetailHeader"></h5>
+      </div>
+      <div class="modal-body">
+        <table class="table">
+          <tbody>
+            <tr>
+              <th scope="col">Hours To Close</th>
+              <td scope="col" id="hrToClose"></td>
+            </tr>
+            <tr>
+              <th scope="row" id="qtyLongHeader">Qty Long Header</th>
+              <td id="qtyLong"></td>
+            </tr>
+            <tr>
+              <th scope="row" id="qtyShortHeader">Qty Short Header</th>
+              <td id="qtyShort"></td>
+            </tr>
+          </tbody>
+        </table>
+        <div id="graph"></div>
+      </div>
+      <div class="modal-footer">
+        <button onclick="hideTradeDetails()" type="button" class="btn btn-secondary" data-dismiss="modal">Ok</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 
 <script>
+  var tradeDetails = {};
+  function showTradeDetails(id) {
+    tradeDetails['id'] = id;
+
+
+    $.ajax({
+      url: "/trade-details/" + id,
+      context: document.body,
+      success: function (done) {
+        console.log(done)
+        if (done) {
+          $('#tradeDetailHeader').text(`${done.Id} ${done.SymbolLong} ${done.SymbolShort}`)
+          $('#qtyLongHeader').text("Qty Long")
+          $('#qtyLong').text(done.QtyLong)
+          $('#qtyShortHeader').text("Qty Short")
+          $('#qtyShort').text(done.QtyShort)
+          $('#hrToClose').html(done.HoursToClose)
+          $('#tradeDetailsModal').modal('show')
+
+          $.ajax({
+            url: "/get-graph/" + id + "/general",
+            context: document.body,
+            success: function (graph) {
+              const { url } = JSON.stringify(graph)
+              $('#graph').html(url)
+            },
+            error: function (err) {
+              $('#graph').html('<div class="small">Error while getting image</div>');
+              console.error(err)
+            }
+
+          })
+
+
+        } else {
+        }
+      },
+      error: function (err) {
+
+      },
+    });
+
+
+
+
+
+
+
+  }
+
+  function hideTradeDetails() {
+    $('#tradeDetailsModal').modal('hide')
+    console.log("close")
+  }
+
+
+  $('#tradeDetailsModal').on('show.bs.modal', function (event) {
+    // If necessary, you could initiate an AJAX request here (and then do the updating in a callback).
+    // Update the modal's content. We'll use jQuery here, but you could use a data binding library or other methods instead.
+    var modal = $(this)
+    console.log(tradeDetails)
+
+  })
 
 </script>
+
+
+{{end}}

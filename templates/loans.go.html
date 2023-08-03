@@ -1,0 +1,33 @@
+{{template "base" .}} {{define "content"}}
+
+
+<table class="table">
+    <thead>
+        <tr>
+            <th scope="col">Asset</th>
+            <th scope="col">Borrowed</th>
+            <th scope="col">Trade Borrow Amount</th>
+            <th scope="col">Free</th>
+            <th scope="col">Locked</th>
+        </tr>
+    </thead>
+    <tbody>
+        {{range index .Data "loans"}}
+        <tr {{if ne .trade_dept .borrowed }} class="table-info" {{end}}>
+            <td>{{.asset}}</td>
+            <td>{{.borrowed}}</td>
+            <td>{{.trade_dept}}</td>
+            <td>{{.free}}</td>
+            <td>{{.locked}}</td>
+        </tr>
+        {{end}}
+    </tbody>
+</table>
+
+
+
+
+
+
+
+{{end}}

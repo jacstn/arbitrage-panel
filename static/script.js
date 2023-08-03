@@ -3,17 +3,6 @@ currId = 0;
 
 const xhr = new XMLHttpRequest();
 
-function onDelayRequestEnd(e) {
-  const res = JSON.parse(e.target.responseText);
-  if (res.status === "err") {
-    console.log("error while delaying", res);
-  } else if (res.status == "ok") {
-    addSuccessAlert("ok", res.trade_id);
-  }
-}
-
-let selectedToClose = undefined;
-
 function addSuccessAlert(msg, id) {
   $("#transaction-row-" + id).after(
     `<tr id="transaction-logs"><td colspan="9">
@@ -22,6 +11,28 @@ ${msg}</div>
           </td></tr>`
   );
 }
+
+function addErrorAlert(msg, id) {
+  console.log("adding danger alert");
+  $("#transaction-row-" + id).after(
+    `<tr id="transaction-logs"><td colspan="9">
+          <div class="alert alert-danger" role="alert">
+${msg}</div>
+          </td></tr>`
+  );
+}
+
+function onDelayRequestEnd(e) {
+  const res = JSON.parse(e.target.responseText);
+  console.log(res);
+  if (res.status === "err") {
+    console.log("error while delaying", res);
+  } else if (res.status == "ok") {
+    addSuccessAlert("Trade Delayed ", res.data);
+  }
+}
+
+let selectedToClose = undefined;
 
 function closeTrade(id) {
   const newEl = document.getElementById("close-link-" + id);
@@ -34,18 +45,26 @@ function closeTrade(id) {
     selectedToClose = id;
 
     newEl.className = "btn btn-danger btn-sm";
-    return;
+    return false;
   }
   newEl.className = "";
   console.log(id);
-
-  xhr.open("GET", "/close-trade/" + id);
-  xhr.send();
-  return false;
+  const request = new XMLHttpRequest();
+  request.open("GET", "/close-trade/" + id);
+  request.send();
+  request.addEventListener("loadend", (data) => {
+    const { target } = data;
+    const { responseText } = target;
+    console.log(target, JSON.parse(responseText).msg);
+    if (target.status === 502) {
+      addErrorAlert(JSON.parse(responseText).msg, id);
+      return false;
+    }
+  });
+  return true;
 }
 
-function tradeDetails(id) {
-  console.log(id);
+function tradeLogs(id) {
   xhr.open("GET", "/get-logs/" + id);
   xhr.send();
   xhr.on;
@@ -65,6 +84,7 @@ xhr.addEventListener("load", () => {
 });
 
 function delay(id) {
+  console.log("delay reqeust");
   xhr.open("GET", "/delay-trade/" + id);
   xhr.send();
   xhr.addEventListener("loadend", onDelayRequestEnd);

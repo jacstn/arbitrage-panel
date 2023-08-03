@@ -6,7 +6,6 @@ import (
 	"html/template"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"os/exec"
 	"sort"
 	"strconv"
@@ -29,10 +28,34 @@ const (
 	IncrLong   = "increasing long from binance"
 )
 
+type BinanceTransaction struct {
+	CummulativeQuoteQty string                 `json:"cummulativeQuoteQty"`
+	X                   map[string]interface{} `json:"-"`
+}
+
+type GenResponse struct {
+	Status string `json:"status"`
+	Msg    string `json:"msg"`
+}
+
 var app *config.AppConfig
 
 func NewHandlers(c *config.AppConfig) {
 	app = c
+}
+
+func GeneralOkResponse(w *http.ResponseWriter, msg string, data interface{}) {
+	(*w).WriteHeader(http.StatusOK)
+	(*w).Header().Set("Content-Type", "application/json")
+	err_ret := fmt.Sprintf("{\"status\": \"ok\",\"data\":\"%s\", \"msg\":\"%s\"}", data, msg)
+	(*w).Write([]byte(err_ret))
+}
+
+func GeneralErrResponse(w *http.ResponseWriter, msg string) {
+	(*w).WriteHeader(http.StatusBadGateway)
+	(*w).Header().Set("Content-Type", "application/json")
+	err_ret := fmt.Sprintf("{\"status\": \"err\",\"msg\":\"%s\"}", msg)
+	(*w).Write([]byte(err_ret))
 }
 
 func About(w http.ResponseWriter, r *http.Request) {
@@ -42,9 +65,25 @@ func About(w http.ResponseWriter, r *http.Request) {
 	renderTemplate(w, "about", &data)
 }
 
-type BinanceTransaction struct {
-	CummulativeQuoteQty string                 `json:"cummulativeQuoteQty"`
-	X                   map[string]interface{} `json:"-"`
+func Loans(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("loans")
+	data := make(map[string]interface{})
+	data["csrf_token"] = nosurf.Token(r)
+
+	out, err := RunPythonCmd("trading-panel-actions", "depts")
+
+	if err != nil {
+		fmt.Println("error")
+		data["error"] = "error"
+	}
+	var sr ScriptResponse
+	json.Unmarshal([]byte(out), &sr)
+	fmt.Println(out)
+	data["loans"] = sr.Data
+	fmt.Println(sr.Data)
+	renderTemplate(w, "loans", &models.TemplateData{
+		Data: data,
+	})
 }
 
 func getTradeResult(tid uint64) (float32, int) {
@@ -166,7 +205,6 @@ func GetLogs(w http.ResponseWriter, r *http.Request) {
 }
 
 func TradeDetails(w http.ResponseWriter, r *http.Request) {
-	data := make(map[string]interface{})
 	id, err := strconv.Atoi(chi.URLParam(r, "id"))
 
 	if err != nil {
@@ -174,12 +212,9 @@ func TradeDetails(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data["trade"] = models.GetTradeById(app.DB, uint64(id))
+	trade := models.GetTradeById(app.DB, uint64(id))
 
-	renderTemplate(w, "trade-details", &models.TemplateData{
-		Form: forms.New(nil),
-		Data: data,
-	})
+	render.JSON(w, r, trade)
 }
 
 func Market(w http.ResponseWriter, r *http.Request) {
@@ -191,9 +226,9 @@ func Market(w http.ResponseWriter, r *http.Request) {
 }
 
 type ScriptResponse struct {
-	Status  string `json:"status"`
-	Message string `json:"msg"`
-	Data    string `json:"data"`
+	Status  string      `json:"status"`
+	Message string      `json:"msg"`
+	Data    interface{} `json:"data"`
 }
 
 func DelayTrade(w http.ResponseWriter, r *http.Request) {
@@ -201,47 +236,69 @@ func DelayTrade(w http.ResponseWriter, r *http.Request) {
 
 	models.DelayTrade(app.DB, trade_id)
 
-	w.WriteHeader(http.StatusOK)
-	w.Header().Set("Content-Type", "application/json")
-	err_ret := fmt.Sprintf("{\"status\": \"ok\",\"trade_id\":%s}", trade_id)
-	w.Write([]byte(err_ret))
+	GeneralOkResponse(&w, "", trade_id)
+}
+
+func RunPythonCmd(command string, args ...string) (string, error) {
+	arguments := ""
+	for _, v := range args {
+		if arguments == "" {
+			arguments = v
+		} else {
+			arguments = fmt.Sprintf("%s,%s", arguments, v)
+		}
+	}
+	cmd := exec.Command(app.PythonExecuteCmd, fmt.Sprintf("%s/%s.py", app.PythonScriptsDir, command), arguments)
+	fmt.Println("running python command")
+	fmt.Println(cmd.String())
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", err
+	}
+	return string(out[:]), err
+}
+
+func GetGraph(w http.ResponseWriter, r *http.Request) {
+	trade_id := chi.URLParam(r, "id")
+	graph_mode := chi.URLParam(r, "mode")
+
+	out, err := RunPythonCmd("trading-panel-graph", trade_id, graph_mode)
+	fmt.Println(out)
+	if err != nil {
+		fmt.Println(err)
+		GeneralErrResponse(&w, "Python script error")
+		return
+	}
+	GeneralOkResponse(&w, "ok", out)
 }
 
 func CloseTrade(w http.ResponseWriter, r *http.Request) {
 	trade_id := chi.URLParam(r, "id")
 
-	fmt.Println(os.Getenv("ARBITRAGE_PY"))
-	cmd := exec.Command(os.Getenv("ARBITRAGE_PY"), fmt.Sprintf("%s/trading-panel-actions.py",
-		os.Getenv("ARBITRAGE_PY_DIR")), "close_trade", trade_id)
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		w.WriteHeader(http.StatusOK)
-		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte("{\"err\":1}"))
-	}
-
-	var unmarshalled ScriptResponse
-
-	err = json.Unmarshal([]byte(out), &unmarshalled)
-	if err != nil {
-		fmt.Println("error whlile parsing python script response")
-	}
-
-	fmt.Println("closed trade, result", unmarshalled)
-	render.JSON(w, r, unmarshalled)
-}
-
-func ListFiles(w http.ResponseWriter, r *http.Request) {
-	pyPath := os.Getenv("ARBITRAGE_PY_DIR")
-	if pyPath == "" {
-		http.Error(w, pyPath, 400)
+	if !app.Production {
+		GeneralErrResponse(&w, "Option only available for Production environment")
 		return
 	}
 
-	files, err := ioutil.ReadDir(pyPath + "/data")
+	if app.PythonScriptsDir == "" {
+		GeneralErrResponse(&w, "Python environments are not set")
+		return
+	}
+	_, err := RunPythonCmd("trading-panel-actions", "close_trade", trade_id)
+
+	if err != nil {
+		GeneralErrResponse(&w, "error while closing trade")
+		return
+	}
+
+	GeneralOkResponse(&w, "trade closed", trade_id)
+}
+
+func ListFiles(w http.ResponseWriter, r *http.Request) {
+	files, err := ioutil.ReadDir(app.PythonScriptsDir + "/data")
 	if err != nil {
 		fmt.Println(err)
-		http.Error(w, "cannot read python files path: "+pyPath, 400)
+		http.Error(w, "cannot read python files path: "+app.PythonScriptsDir, 400)
 		return
 	}
 	var fl []string
