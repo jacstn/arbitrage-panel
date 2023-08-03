@@ -23,7 +23,8 @@ func main() {
 	session.Lifetime = 24 * time.Hour
 	session.Cookie.Persist = true
 	session.Cookie.Secure = app.Production
-	godotenv.Load()
+	godotenv.Load(".env")
+	fmt.Println(os.Getenv("RUN_MODE"))
 	db := database.Connect()
 	app.DB = db
 
