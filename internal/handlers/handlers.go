@@ -280,10 +280,6 @@ func CloseTrade(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if app.PythonScriptsDir == "" {
-		GeneralErrResponse(&w, "Python environments are not set")
-		return
-	}
 	_, err := RunPythonCmd("trading-panel-actions", "close_trade", trade_id)
 
 	if err != nil {

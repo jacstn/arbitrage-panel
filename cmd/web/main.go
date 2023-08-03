@@ -11,6 +11,7 @@ import (
 	"github.com/jacstn/arbitrage-panel/config"
 	"github.com/jacstn/arbitrage-panel/internal/database"
 	"github.com/jacstn/arbitrage-panel/internal/handlers"
+	"github.com/joho/godotenv"
 )
 
 const portNumber = ":3333"
@@ -22,13 +23,14 @@ func main() {
 	session.Lifetime = 24 * time.Hour
 	session.Cookie.Persist = true
 	session.Cookie.Secure = app.Production
-
+	godotenv.Load()
 	db := database.Connect()
 	app.DB = db
 
 	app.Session = session
 	app.PythonScriptsDir = os.Getenv("ARBITRAGE_PY_DIR")
 	app.PythonExecuteCmd = os.Getenv("ARBITRAGE_PY")
+
 	if app.PythonExecuteCmd == "" || app.PythonScriptsDir == "" {
 		log.Fatal("Cannot start server, python envirnoment error")
 	}
