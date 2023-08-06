@@ -107,7 +107,7 @@
   var tradeDetails = {};
   function showTradeDetails(id) {
     tradeDetails['id'] = id;
-
+    $('#graph').html("")
 
     $.ajax({
       url: "/trade-details/" + id,
