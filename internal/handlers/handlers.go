@@ -262,14 +262,24 @@ func GetGraph(w http.ResponseWriter, r *http.Request) {
 	trade_id := chi.URLParam(r, "id")
 	graph_mode := chi.URLParam(r, "mode")
 
-	out, err := RunPythonCmd("trading-panel-graph", trade_id, graph_mode)
-	fmt.Println(out)
+	out, err := RunPythonCmd("trading-panel-actions", "graph", trade_id, graph_mode)
 	if err != nil {
 		fmt.Println(err)
 		GeneralErrResponse(&w, "Python script error")
 		return
 	}
-	GeneralOkResponse(&w, "ok", out)
+
+	var resp ScriptResponse
+
+	err = json.Unmarshal([]byte(out), &resp)
+
+	if err != nil {
+		fmt.Println(err)
+		GeneralErrResponse(&w, "Python script error")
+		return
+	}
+
+	GeneralOkResponse(&w, resp.Message, resp.Data)
 }
 
 func CloseTrade(w http.ResponseWriter, r *http.Request) {

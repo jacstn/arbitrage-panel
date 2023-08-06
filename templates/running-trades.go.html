@@ -92,7 +92,8 @@
             </tr>
           </tbody>
         </table>
-        <div id="graph"></div>
+        <div id="graph" style="width: 100%; height: 100vh;">
+        </div>
       </div>
       <div class="modal-footer">
         <button onclick="hideTradeDetails()" type="button" class="btn btn-secondary" data-dismiss="modal">Ok</button>
@@ -125,12 +126,13 @@
           $.ajax({
             url: "/get-graph/" + id + "/general",
             context: document.body,
-            success: function (graph) {
-              const { url } = JSON.stringify(graph)
-              $('#graph').html(url)
+            success: function (resp) {
+              const htmlFile = `/figs/html/${resp.msg}`
+              console.log("trying to locate", htmlFile)
+              $('#graph').html(`<iframe src="${htmlFile}" style="width: 100%; height: 100%; border: none;"></iframe>`);
             },
             error: function (err) {
-              $('#graph').html('<div class="small">Error while getting image</div>');
+
               console.error(err)
             }
 
@@ -141,7 +143,7 @@
         }
       },
       error: function (err) {
-
+        console.error("getting trade details error", err)
       },
     });
 

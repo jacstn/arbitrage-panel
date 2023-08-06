@@ -32,6 +32,7 @@ func routes() *chi.Mux {
 
 	dataPath := os.Getenv("ARBITRAGE_PY_DIR") + "/data"
 	mux.Handle("/data/*", http.StripPrefix("/data", http.FileServer(http.Dir(dataPath))))
-
+	figPath := os.Getenv("ARBITRAGE_PY_DIR") + "/figs"
+	mux.Handle("/figs/*", http.StripPrefix("/figs", http.FileServer(http.Dir(figPath))))
 	return mux
 }
