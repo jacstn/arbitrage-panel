@@ -9,10 +9,33 @@
 </div>
 {{else}}
 <div class="row">
-    <div class="col-lg-6">
+    <div class="col-lg-3">
         <div class="card">
             <div class="card-body">
-                <p>Balance: <span id="usdtVal"></span> USDT, <span id="btcVal"></span> BTC</p>
+                <div style="text-align: left; width: auto;">
+                    Balance:<br /><span id="usdtVal"></span> USDT<br /><span id="btcVal"></span> BTC
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-3">
+        <div class="card">
+            <div class="card-body">
+                <div style="text-align: left; width: auto;">
+                    Today:<br /><span id="earnedTodayUsdt"></span> USDT<br /><span id="earnedTodayBtc"></span> BTC
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-3">
+        <div class="card">
+            <div class="card-body">
+                <div style="text-align: left; width: auto;">
+                    This Week:<br /><span id="earnedThisWeekUsdt"></span> USDT<br /><span id="earnedThisWeekBtc"></span>
+                    BTC
+                </div>
             </div>
         </div>
     </div>
@@ -21,11 +44,23 @@
 <script>
     $(document).ready(() => {
         const data = JSON.parse("{{.accountData}}")
-        const usdtVal = parseFloat(data.spotUsdt[data.spotUsdt.length - 1].free) + parseFloat(data.marginUsdt[data.marginUsdt.length - 1].free)
+        console.log(data)
+        const usdtVal = parseFloat(data.todaysUsdtValue)
         $('#usdtVal').html(usdtVal.toFixed(2))
 
-        const btcVal = parseFloat(data.spotBtc[data.spotBtc.length - 1].free) + parseFloat(data.marginBtc[data.marginBtc.length - 1].free)
+        const btcVal = parseFloat(data.todaysBtcValue)
         $('#btcVal').html(btcVal.toFixed(8))
+
+        const todayUsdEarn = parseFloat(data.todaysUsdtValue) - parseFloat(data.yesterdayUsdtValue)
+        const todayBtcEarn = parseFloat(data.todaysBtcValue) - parseFloat(data.yesterdayBtcValue)
+        $('#earnedTodayUsdt').html(todayUsdEarn.toFixed(2))
+        $('#earnedTodayBtc').html(todayBtcEarn.toFixed(8))
+        const thisWeekUsdtEarn = parseFloat(data.todaysUsdtValue) - data.sevenDayUsdtValue
+        const thisWeekBtcEarn = parseFloat(data.todaysBtcValue) - data.sevenDayBtcValue
+        $('#earnedThisWeekUsdt').html(thisWeekUsdtEarn.toFixed(2))
+        $('#earnedThisWeekBtc').html(thisWeekBtcEarn.toFixed(8))
+
+
     });
 </script>
 
