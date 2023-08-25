@@ -7,6 +7,15 @@ import (
 	"strings"
 )
 
+const (
+	OpenLong   = "long from binance"
+	CloseLong  = "SPOT closed long info"
+	OpenShort  = "CROSS short from binance"
+	CloseShort = "CROSS closed short info"
+	IncrShort  = "increasing CROSS short from binance"
+	IncrLong   = "increasing long from binance"
+)
+
 type Trade struct {
 	// database elements
 	Id           uint64
@@ -33,6 +42,7 @@ type Trade struct {
 	IncNo          int
 	ShouldCloseAgo int
 	OpenedAgoHr    int
+	Opens          []TradeOpen
 }
 
 type TradeLog struct {
@@ -51,6 +61,13 @@ type BnbTrans struct {
 	Qty       float64
 	CreatedAt string
 	Mode      string
+}
+
+type TradeOpen struct {
+	Id      uint64
+	Value   float64
+	IsLong  bool
+	Occured string
 }
 
 func getTradeValueAtPlannedClose(db *sql.DB, trade Trade) {
@@ -233,18 +250,31 @@ func GetTradeById(db *sql.DB, id uint64) Trade {
 	err := db.QueryRow(fmt.Sprintf(`SELECT 
 	(SELECT price FROM prices where symbol=symbol_long ORDER BY time DESC LIMIT 1) * qty_long as val_long, 
 	(SELECT price FROM prices where symbol=symbol_short ORDER BY time DESC LIMIT 1) * qty_short as val_short, 
-	id, status, symbol_long, symbol_short, qty_long, qty_short, openedAt, 
+	id, status, symbol_long, symbol_short, qty_long, qty_short, openedAt, TIMEDIFF(NOW(), openedAt) AS opened_ago,
 	hours_to_close - HOUR(TIMEDIFF(NOW(), openedAt)) AS hrtoclose, updatedAt FROM trades 
 	WHERE id=%d`, id)).Scan(&trade.ValLong, &trade.ValShort,
 		&trade.Id, &trade.Status, &trade.SymbolLong,
 		&trade.SymbolShort,
-		&trade.QtyLong, &trade.QtyShort, &trade.OpenedAt,
+		&trade.QtyLong, &trade.QtyShort, &trade.OpenedAt, &trade.OpenedAgo,
 		&trade.HoursToClose,
 		&trade.UpdatedAt)
 
 	if err != nil {
 		fmt.Println(err)
 		return Trade{}
+	}
+
+	tos := []TradeOpen{}
+
+	logs := GetLogs(db, id)
+	for _, v := range logs {
+		if v.Category == OpenLong || v.Category == IncrLong {
+			to := TradeOpen{
+
+				Value: 0.0,
+			}
+			tos = append(tos, to)
+		}
 	}
 
 	return trade

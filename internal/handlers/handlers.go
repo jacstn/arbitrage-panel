@@ -19,6 +19,11 @@ import (
 	"github.com/justinas/nosurf"
 )
 
+type BinanceTransaction struct {
+	CummulativeQuoteQty string                 `json:"cummulativeQuoteQty"`
+	X                   map[string]interface{} `json:"-"`
+}
+
 const (
 	OpenLong   = "long from binance"
 	CloseLong  = "SPOT closed long info"
@@ -27,11 +32,6 @@ const (
 	IncrShort  = "increasing CROSS short from binance"
 	IncrLong   = "increasing long from binance"
 )
-
-type BinanceTransaction struct {
-	CummulativeQuoteQty string                 `json:"cummulativeQuoteQty"`
-	X                   map[string]interface{} `json:"-"`
-}
 
 type GenResponse struct {
 	Status string `json:"status"`
@@ -65,6 +65,24 @@ func About(w http.ResponseWriter, r *http.Request) {
 	renderTemplate(w, "about", &data)
 }
 
+func Info(w http.ResponseWriter, r *http.Request) {
+	data := make(map[string]interface{})
+	out, err := RunPythonCmd("trading-panel-actions", "account_info")
+	if err != nil {
+		fmt.Println("error")
+		data["error"] = "run python script error"
+	}
+	data["error"] = ""
+	var sr ScriptResponse
+	json.Unmarshal([]byte(out), &sr)
+
+	data["accountData"] = sr.Data
+
+	renderTemplate(w, "info", &models.TemplateData{
+		Data: data,
+	})
+}
+
 func Loans(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("loans")
 	data := make(map[string]interface{})
@@ -78,7 +96,7 @@ func Loans(w http.ResponseWriter, r *http.Request) {
 	}
 	var sr ScriptResponse
 	json.Unmarshal([]byte(out), &sr)
-	fmt.Println(out)
+
 	data["loans"] = sr.Data
 	fmt.Println(sr.Data)
 	renderTemplate(w, "loans", &models.TemplateData{

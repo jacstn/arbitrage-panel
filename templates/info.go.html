@@ -1,0 +1,35 @@
+{{template "base" .}}
+
+{{define "content"}}
+
+{{with index .Data}}
+{{if ne .error ""}}
+<div class="alert alert-danger" role="alert">
+    {{.error}}
+</div>
+{{else}}
+<div class="row">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-body">
+                <p>Balance: <span id="usdtVal"></span> USDT, <span id="btcVal"></span> BTC</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(() => {
+        const data = JSON.parse("{{.accountData}}")
+        const usdtVal = parseFloat(data.spotUsdt[data.spotUsdt.length - 1].free) + parseFloat(data.marginUsdt[data.marginUsdt.length - 1].free)
+        $('#usdtVal').html(usdtVal.toFixed(2))
+
+        const btcVal = parseFloat(data.spotBtc[data.spotBtc.length - 1].free) + parseFloat(data.marginBtc[data.marginBtc.length - 1].free)
+        $('#btcVal').html(btcVal.toFixed(8))
+    });
+</script>
+
+{{end}}
+{{end}}
+
+{{end}}
