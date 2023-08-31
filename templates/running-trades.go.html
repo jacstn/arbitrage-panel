@@ -1,4 +1,5 @@
 {{template "base" .}} {{define "content"}}
+<span id="diff-placeholder"></span>
 <div class="row mt-2">
   <div class="col-6">
     <div class="card">
@@ -39,6 +40,7 @@
         {{ .CurrResDisp}} {{if gt .IncNo 1}}
         <span class="badge bg-secondary">{{ .IncNo }}</span>
         {{end}}
+        <span id="diff-placeholder-{{.Id}}"></span>
       </td>
       <td {{if lt .HoursToClose 10}} class="table-warning" {{ end }}>
         {{ .HoursToClose}}
@@ -94,6 +96,30 @@
               <th scope="row" id="qtyShortHeader">Qty Short</th>
               <td id="qtyShort"></td>
             </tr>
+            <tr>
+              <th scope="row">Open Diff</th>
+              <td id="openDiff"></td>
+            </tr>
+            <tr>
+              <th scope="row">Curr Diff</th>
+              <td id="currDiff"></td>
+            </tr>
+            <tr>
+              <th scope="row">Target Diff</th>
+              <td><span id="targetDiff"></span>
+                <span id="inc-delay"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                    class="bi bi-plus-circle" viewBox="0 0 16 16">
+                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
+                    <path
+                      d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z" />
+                  </svg></span>
+                <span id="dec-delay"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                    class="bi bi-dash-circle" viewBox="0 0 16 16">
+                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
+                    <path d="M4 8a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 4 8z" />
+                  </svg></span>
+              </td>
+            </tr>
           </tbody>
         </table>
         <div id="graph" style="width: 100%; height: 100vh;">
@@ -125,6 +151,12 @@
           $('#qtyShort').text(done.QtyShort)
           $('#hrToClose').html(done.HoursToClose)
           $('#openedAgo').html(done.OpenedAgo)
+          const openDiff = (Math.abs(parseFloat(done.OpenDiff)) * 100).toFixed(2) + "%"
+          $('#openDiff').html(openDiff)
+          const diff = (parseFloat(done.CurrDiff) * 100).toFixed(2) + "%"
+          $('#currDiff').html(diff)
+          const targetDiff = (Math.abs(parseFloat(done.TargetDiff)) * 100).toFixed(2) + "%"
+          $('#targetDiff').html(targetDiff)
           $('#tradeDetailsModal').modal('show')
 
           $.ajax({
@@ -164,31 +196,6 @@
     console.log(tradeDetails)
 
   })
-
-</script>
-
-
-<script>
-  const tradeIds = [
-    {{ range index .Data "trade_list"}}
-  '{{ .Id }}',
-    {{ end }}
-  ]
-  $(document).ready(function () {
-
-
-    console.log(tradeIds)
-    $.ajax({
-      url: 'ajax_load.php',
-      type: "post",
-      data: "artist=<?php echo $artist; ?>",
-      dataType: 'html',
-      beforeSend: function () {
-        $('#current_page').append("loading..");
-      },
-      success: finished //Change to this
-    });
-  });
 
 </script>
 

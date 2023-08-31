@@ -39,6 +39,7 @@ type Trade struct {
 	CurrRes        float32
 	CurrResUsd     float32
 	CurrResDisp    string
+	CurrDiff       float32
 	IncNo          int
 	ShouldCloseAgo int
 	OpenedAgoHr    int
@@ -250,15 +251,17 @@ func GetTradeById(db *sql.DB, id uint64) Trade {
 	err := db.QueryRow(fmt.Sprintf(`SELECT 
 	(SELECT price FROM prices where symbol=symbol_long ORDER BY time DESC LIMIT 1) * qty_long as val_long, 
 	(SELECT price FROM prices where symbol=symbol_short ORDER BY time DESC LIMIT 1) * qty_short as val_short, 
-	id, status, symbol_long, symbol_short, qty_long, qty_short, openedAt, TIMEDIFF(NOW(), openedAt) AS opened_ago,
+	id, status, symbol_long, symbol_short, qty_long, qty_short, open_diff, target_diff, openedAt, TIMEDIFF(NOW(), openedAt) AS opened_ago,
 	hours_to_close - HOUR(TIMEDIFF(NOW(), openedAt)) AS hrtoclose, updatedAt FROM trades 
 	WHERE id=%d`, id)).Scan(&trade.ValLong, &trade.ValShort,
 		&trade.Id, &trade.Status, &trade.SymbolLong,
 		&trade.SymbolShort,
-		&trade.QtyLong, &trade.QtyShort, &trade.OpenedAt, &trade.OpenedAgo,
+		&trade.QtyLong, &trade.QtyShort,
+		&trade.OpenDiff,
+		&trade.TargetDiff,
+		&trade.OpenedAt, &trade.OpenedAgo,
 		&trade.HoursToClose,
 		&trade.UpdatedAt)
-
 	if err != nil {
 		fmt.Println(err)
 		return Trade{}
@@ -323,14 +326,11 @@ func GetListOfBnbTransactions(db *sql.DB) []BnbTrans {
 	return bnbTrans
 }
 
-func GetCurrPriceDiff(db *sql.DB, tid string) float32 {
-	query := fmt.Sprintf("SELECT "+
-		"(((SELECT  `price` FROM prices WHERE symbol=(select symbol_short from trades where id=%s) ORDER BY `time` DESC LIMIT 1) /"+
-		"(SELECT  `price` FROM prices WHERE symbol=(select symbol_short from trades where id=%s) and `time` > (select time_origin from trades where id=%s) ORDER BY `time` ASC LIMIT 1) - 1)) - "+
-		"(((SELECT  `price` FROM prices WHERE symbol=(select symbol_long from trades where id=%s) ORDER BY `time` DESC LIMIT 1) / "+
-		"(SELECT  `price` FROM prices WHERE symbol=(select symbol_long from trades where id=%s) and `time` > (select time_origin from trades where id=%s) ORDER BY `time` ASC LIMIT 1) - 1))",
+func GetCurrPriceDiff(db *sql.DB, tid int) float32 {
+	fmt.Println(tid)
+	query := fmt.Sprintf("SELECT (((SELECT `price` FROM prices WHERE symbol=(select symbol_short from trades where id=%d) ORDER BY `time` DESC LIMIT 1) / (SELECT  `price` FROM prices WHERE symbol=(select symbol_short from trades where id=%d) and `time` > (SELECT time_origin from trades where id=%d) ORDER BY `time` ASC LIMIT 1) - 1)) - (((SELECT  `price` FROM prices WHERE symbol=(select symbol_long from trades where id=%d) ORDER BY `time` DESC LIMIT 1) / (SELECT  `price` FROM prices WHERE symbol=(select symbol_long from trades where id=%d) and `time` > (SELECT time_origin from trades where id=%d) ORDER BY `time` ASC LIMIT 1) - 1))",
 		tid, tid, tid, tid, tid, tid)
-
+	fmt.Println(query)
 	var diff float32
 	err := db.QueryRow(query).Scan(&diff)
 

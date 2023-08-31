@@ -231,6 +231,7 @@ func TradeDetails(w http.ResponseWriter, r *http.Request) {
 	}
 
 	trade := models.GetTradeById(app.DB, uint64(id))
+	trade.CurrDiff = models.GetCurrPriceDiff(app.DB, id)
 
 	render.JSON(w, r, trade)
 }
@@ -258,7 +259,12 @@ func DelayTrade(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetCurrentPriceDiff(w http.ResponseWriter, r *http.Request) {
-	trade_id := chi.URLParam(r, "tradeId")
+	trade_id, err := strconv.Atoi(chi.URLParam(r, "tradeId"))
+
+	if err != nil {
+		http.Error(w, http.StatusText(404), 404)
+		return
+	}
 
 	diff := models.GetCurrPriceDiff(app.DB, trade_id)
 	fmt.Println(diff)
