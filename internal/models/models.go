@@ -322,3 +322,23 @@ func GetListOfBnbTransactions(db *sql.DB) []BnbTrans {
 
 	return bnbTrans
 }
+
+func GetCurrPriceDiff(db *sql.DB, tid string) float32 {
+	query := fmt.Sprintf("SELECT "+
+		"(((SELECT  `price` FROM prices WHERE symbol=(select symbol_short from trades where id=%s) ORDER BY `time` DESC LIMIT 1) /"+
+		"(SELECT  `price` FROM prices WHERE symbol=(select symbol_short from trades where id=%s) and `time` > (select time_origin from trades where id=%s) ORDER BY `time` ASC LIMIT 1) - 1)) - "+
+		"(((SELECT  `price` FROM prices WHERE symbol=(select symbol_long from trades where id=%s) ORDER BY `time` DESC LIMIT 1) / "+
+		"(SELECT  `price` FROM prices WHERE symbol=(select symbol_long from trades where id=%s) and `time` > (select time_origin from trades where id=%s) ORDER BY `time` ASC LIMIT 1) - 1))",
+		tid, tid, tid, tid, tid, tid)
+
+	var diff float32
+	err := db.QueryRow(query).Scan(&diff)
+
+	if err != nil {
+		fmt.Println(err)
+		return 0
+	}
+
+	return diff
+
+}

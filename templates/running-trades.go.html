@@ -149,13 +149,6 @@
         console.error("getting trade details error", err)
       },
     });
-
-
-
-
-
-
-
   }
 
   function hideTradeDetails() {
@@ -174,5 +167,29 @@
 
 </script>
 
+
+<script>
+  const tradeIds = [
+    {{ range index .Data "trade_list"}}
+  '{{ .Id }}',
+    {{ end }}
+  ]
+  $(document).ready(function () {
+
+
+    console.log(tradeIds)
+    $.ajax({
+      url: 'ajax_load.php',
+      type: "post",
+      data: "artist=<?php echo $artist; ?>",
+      dataType: 'html',
+      beforeSend: function () {
+        $('#current_page').append("loading..");
+      },
+      success: finished //Change to this
+    });
+  });
+
+</script>
 
 {{end}}

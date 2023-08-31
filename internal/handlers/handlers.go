@@ -257,6 +257,14 @@ func DelayTrade(w http.ResponseWriter, r *http.Request) {
 	GeneralOkResponse(&w, "", trade_id)
 }
 
+func GetCurrentPriceDiff(w http.ResponseWriter, r *http.Request) {
+	trade_id := chi.URLParam(r, "tradeId")
+
+	diff := models.GetCurrPriceDiff(app.DB, trade_id)
+	fmt.Println(diff)
+	GeneralOkResponse(&w, "diff", fmt.Sprintf("%f", diff))
+}
+
 func RunPythonCmd(command string, args ...string) (string, error) {
 	arguments := ""
 	for _, v := range args {
