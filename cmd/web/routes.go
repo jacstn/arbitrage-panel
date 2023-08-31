@@ -28,6 +28,7 @@ func routes() *chi.Mux {
 	mux.Get("/trade-details/{id}", handlers.TradeDetails)
 	mux.Get("/get-graph/{id}/{mode}", handlers.GetGraph)
 	mux.Get("/get-curr-price-diff/{tradeId}", handlers.GetCurrentPriceDiff)
+	mux.Get("/update-target-diff/{action}/{tradeId}", handlers.UpdateTargetDiff)
 	mux.Get("/info", handlers.Info)
 
 	mux.Handle("/static/*", http.StripPrefix("/static", http.FileServer(http.Dir("./static"))))

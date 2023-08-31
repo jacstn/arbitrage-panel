@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"math"
 	"strings"
 )
 
@@ -39,7 +40,7 @@ type Trade struct {
 	CurrRes        float32
 	CurrResUsd     float32
 	CurrResDisp    string
-	CurrDiff       float32
+	CurrDiff       float64
 	IncNo          int
 	ShouldCloseAgo int
 	OpenedAgoHr    int
@@ -326,12 +327,11 @@ func GetListOfBnbTransactions(db *sql.DB) []BnbTrans {
 	return bnbTrans
 }
 
-func GetCurrPriceDiff(db *sql.DB, tid int) float32 {
-	fmt.Println(tid)
+func GetCurrPriceDiff(db *sql.DB, tid int) float64 {
 	query := fmt.Sprintf("SELECT (((SELECT `price` FROM prices WHERE symbol=(select symbol_short from trades where id=%d) ORDER BY `time` DESC LIMIT 1) / (SELECT  `price` FROM prices WHERE symbol=(select symbol_short from trades where id=%d) and `time` > (SELECT time_origin from trades where id=%d) ORDER BY `time` ASC LIMIT 1) - 1)) - (((SELECT  `price` FROM prices WHERE symbol=(select symbol_long from trades where id=%d) ORDER BY `time` DESC LIMIT 1) / (SELECT  `price` FROM prices WHERE symbol=(select symbol_long from trades where id=%d) and `time` > (SELECT time_origin from trades where id=%d) ORDER BY `time` ASC LIMIT 1) - 1))",
 		tid, tid, tid, tid, tid, tid)
-	fmt.Println(query)
-	var diff float32
+
+	var diff float64
 	err := db.QueryRow(query).Scan(&diff)
 
 	if err != nil {
@@ -340,5 +340,29 @@ func GetCurrPriceDiff(db *sql.DB, tid int) float32 {
 	}
 
 	return diff
+}
 
+func UpdateTargetDiff(db *sql.DB, action string, tradeId int) float64 {
+	var targetDiff float64
+	db.QueryRow("SELECT target_diff FROM trades where id=?", tradeId).Scan(&targetDiff)
+
+	targetDiff = math.Abs(targetDiff)
+	fmt.Println("previous target diff", targetDiff)
+	currDiff := GetCurrPriceDiff(db, tradeId)
+	fmt.Println("current trade diff", currDiff)
+	if action == "decrease" {
+		targetDiff -= 0.01
+	} else if action == "increase" {
+		if targetDiff+0.01 > currDiff-0.005 {
+			targetDiff = currDiff - 0.005
+		} else {
+			targetDiff = targetDiff + 0.01
+		}
+	} else {
+		fmt.Println("wrong data")
+		return targetDiff
+	}
+	fmt.Println("new target diff", targetDiff)
+	db.Exec("UPDATE trades set target_diff=? WHERE id=?", targetDiff, tradeId)
+	return targetDiff
 }

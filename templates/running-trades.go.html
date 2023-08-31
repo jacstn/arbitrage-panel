@@ -107,14 +107,14 @@
             <tr>
               <th scope="row">Target Diff</th>
               <td><span id="targetDiff"></span>
-                <span id="inc-delay"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                    class="bi bi-plus-circle" viewBox="0 0 16 16">
+                <span id="inc-target-diff"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                    fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16">
                     <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
                     <path
                       d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z" />
                   </svg></span>
-                <span id="dec-delay"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                    class="bi bi-dash-circle" viewBox="0 0 16 16">
+                <span id="dec-target-diff"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                    fill="currentColor" class="bi bi-dash-circle" viewBox="0 0 16 16">
                     <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
                     <path d="M4 8a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 4 8z" />
                   </svg></span>
@@ -181,6 +181,48 @@
         console.error("getting trade details error", err)
       },
     });
+    var working = false;
+    $('#inc-target-diff').on('click', function (event) {
+      event.preventDefault()
+      if (working) return;
+      else working = true;
+
+      $.ajax({
+        url: "/update-target-diff/increase/" + id,
+        context: document.body,
+        success: function (resp) {
+          const targetDiff = (Math.abs(parseFloat(resp.data)) * 100).toFixed(2) + "%"
+          $('#targetDiff').html(targetDiff)
+          working = false;
+        },
+        error: function (err) {
+          console.error(err)
+          working = false;
+        }
+      })
+    })
+
+
+    $('#dec-target-diff').on('click', function (event) {
+      event.preventDefault();
+      if (working) return;
+      else working = true;
+
+      $.ajax({
+        url: "/update-target-diff/decrease/" + id,
+        context: document.body,
+        success: function (resp) {
+          const targetDiff = (Math.abs(parseFloat(resp.data)) * 100).toFixed(2) + "%"
+          $('#targetDiff').html(targetDiff)
+          working = false;
+        },
+        error: function (err) {
+          console.error(err)
+          working = false;
+        }
+      })
+    })
+
   }
 
   function hideTradeDetails() {
@@ -195,35 +237,6 @@
     var modal = $(this)
     console.log(tradeDetails)
 
-  })
-
-  $('#inc-delay').on('click', function (event) {
-    event.preventDefault()
-    $.ajax({
-      url: "/delay-trade/increase/" + id,
-      context: document.body,
-      success: function (resp) {
-        console.log("ok")
-      },
-      error: function (err) {
-        console.error(err)
-      }
-    })
-  })
-
-
-  $('#dec-delay').on('click', function (event) {
-    event.preventDefault()
-    $.ajax({
-      url: "/delay-trade/decrease/" + id,
-      context: document.body,
-      success: function (resp) {
-        console.log("ok")
-      },
-      error: function (err) {
-        console.error(err)
-      }
-    })
   })
 </script>
 <style>

@@ -258,6 +258,21 @@ func DelayTrade(w http.ResponseWriter, r *http.Request) {
 	GeneralOkResponse(&w, "", trade_id)
 }
 
+func UpdateTargetDiff(w http.ResponseWriter, r *http.Request) {
+	trade_id, err := strconv.Atoi(chi.URLParam(r, "tradeId"))
+
+	if err != nil {
+		http.Error(w, http.StatusText(404), 404)
+		return
+	}
+
+	action := chi.URLParam(r, "action")
+
+	diff := models.UpdateTargetDiff(app.DB, action, trade_id)
+
+	GeneralOkResponse(&w, "diff", fmt.Sprintf("%f", diff))
+}
+
 func GetCurrentPriceDiff(w http.ResponseWriter, r *http.Request) {
 	trade_id, err := strconv.Atoi(chi.URLParam(r, "tradeId"))
 
