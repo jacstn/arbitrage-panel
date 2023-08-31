@@ -197,6 +197,34 @@
 
   })
 
+  $('#inc-delay').on('click', function (event) {
+    event.preventDefault()
+    $.ajax({
+      url: "/delay-trade/increase/" + id,
+      context: document.body,
+      success: function (resp) {
+        console.log("ok")
+      },
+      error: function (err) {
+        console.error(err)
+      }
+    })
+  })
+
+
+  $('#dec-delay').on('click', function (event) {
+    event.preventDefault()
+    $.ajax({
+      url: "/delay-trade/decrease/" + id,
+      context: document.body,
+      success: function (resp) {
+        console.log("ok")
+      },
+      error: function (err) {
+        console.error(err)
+      }
+    })
+  })
 </script>
 <style>
   #inc-delay,
